@@ -27,6 +27,8 @@ use Illuminate\Http\Request;
 use IntlDateFormatter;
 use DateTime;
 
+use Symfony\Component\Console\Output\ConsoleOutput;
+
 class PagesController extends Controller
 {
     public function home()
@@ -137,7 +139,10 @@ class PagesController extends Controller
 
     public function menuRequest()
     {
+        $output = new ConsoleOutput();
+        $output->writeln("Start menu request from controller");
         $activeMenuRamadan = Setting::where('key', 'active_ramadan_menu')->first()->value ?? '';
+        $output->writeln("Get ramadan settings");
 
         if ($activeMenuRamadan == '1') {
             // echo "Today is in Ramadan!";
@@ -152,15 +157,23 @@ class PagesController extends Controller
             return response()->res(success(), 'menu_reuqest',  $data, 200);
         } else {
             // echo "Today is NOT in Ramadan.";
+            $output->writeln("Get Categories");
             $categories = Category::where('status', '1')->where('is_ramadan', '0')->where('is_menu', '1')->orderBy('order')->get();
+            $output->writeln("Get Categories DONE");
             $getCategories = Category::where('status', '1')->where('is_ramadan', '0')->where('is_menu', '1')->orderBy('order')->pluck('id');
+            $output->writeln("Get Meals");
             $meals = Meal::whereIn('category_id', $getCategories)
-                ->where('status', '1')->where('is_ramadan', '0')->where('is_menu', '1')->orderBy('order')->get();
-            $data = [
-                'categories' => CategoriesResource::collection($categories),
-                'meals' => MealsResource::collection($meals)
-            ];
-            return response()->res(success(), 'menu_reuqest',  $data, 200);
+            ->where('status', '1')->where('is_ramadan', '0')->where('is_menu', '1')->orderBy('order')->get();
+            $output->writeln("Get Meals DONE");
+            // $data = [
+            //     'categories' => CategoriesResource::collection($categories),
+            //     'meals' => MealsResource::collection($meals)
+            // ];
+            // return response()->res(success(), 'menu_reuqest',  $data, 200);
+            return response()->json([
+                'success' => true, // based on the success() function name in your code
+                'data' => ['categories' => $categories, 'meals' => $meals],
+            ], 200);
         }
     }
 
@@ -181,5 +194,6 @@ class PagesController extends Controller
             'faqs' => FaqsResource::collection($faqs)
         ];
         return response()->res(success(), 'faq_page',  $data, 200);
+
     }
 }

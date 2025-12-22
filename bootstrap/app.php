@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckLicence;
 use App\Http\Middleware\VerifyIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-    //    $middleware->append([VerifyIsAdmin::class]);
+       $middleware->append([CheckLicence::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Throwable $e,Request $request) {

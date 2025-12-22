@@ -14,6 +14,7 @@ Route::prefix('settings')->group(function () {
     Route::get('footer', [SettingsController::class, 'getFooter']);
     Route::get('ad', [SettingsController::class, 'getAd']);
     Route::get('assets', [SettingsController::class, 'getAssets']);
+    Route::get('reservation', [SettingsController::class, 'getReservationSettings']);
 });
 
 Route::prefix('pages')->group(function () {

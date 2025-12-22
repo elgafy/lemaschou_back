@@ -60,4 +60,15 @@ class SettingsController extends Controller
         $result=Asset::select('image','type')->get();
         return response()->res(success(), 'assets',  $result, 200);
     }
+
+    public function getReservationSettings() {
+        $result = [
+            'use_external_reservation_link' => Setting::where('key', 'use_reservation_external_link')->first()->value ?? '',
+            'external_reservation_link' => Setting::where('key', 'reservation_link')->first()->value ?? '',
+        ];
+        return response()->json([
+            'success' => true, // based on the success() function name in your code
+            'data' => $result,
+        ], 200);
+    }
 }
