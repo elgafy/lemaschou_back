@@ -92,7 +92,6 @@ class SevenroomsService
             'end_time' => $endtime,
             'party_size' => $guests,
         ]);
-        // $date_formatted = Carbon::createFromFormat('Y-m-d', $date);
         // $this->output->writeln("Api Token: " . $this->token);
         $special_day = SpecialDays::where('date', $date)->first();
         // $this->output->writeln("Special Day for " . $date . ": " . $special_day);
@@ -120,13 +119,6 @@ class SevenroomsService
                                 "payment" => $amount ?? null,
                                 ];
                         }
-                        // foreach ($shift['times'] as $avail_time) {
-                        //     $times[] = [
-                        //         "time" => $avail_time['time'],
-                        //         "duration" => $avail_time['duration_minutes_by_party_size'],
-                        //         "payment" => $amount ?? null,
-                        //         ];
-                        // }
                     }
                 }
                 return response()->json([
@@ -194,8 +186,9 @@ class SevenroomsService
                 // 'prepayment_total' => isset($order_total) ? $order_total : 0,
                 'tags' => $tags,
                 'notes' => $notes,
-                'prepayment_total' => 300,
+                // 'prepayment_total' => 300,
                 "bypass_duplicate_reservation_check" => "true",
+
             ]);
         $this->output->writeln("Sevenrooms Query: " . $query);
 

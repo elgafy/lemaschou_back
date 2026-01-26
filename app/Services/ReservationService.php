@@ -13,6 +13,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Output\ConsoleOutput;
 
@@ -59,6 +60,7 @@ class ReservationService
         ], 200);
     }
     public function makeReservation(Request $request) {
+        Log::info("Making reservation with data: " . json_encode($request->all()));
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string|max:10',
@@ -164,6 +166,7 @@ class ReservationService
             $this->output->writeln("Order reservation: " . $order->reservation);
             $this->output->writeln("Order items: " . $order->items);
         }
+
         $this->output->writeln("Created reservation id: " . $reservation->id);
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];
     }
