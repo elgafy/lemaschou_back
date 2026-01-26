@@ -116,7 +116,7 @@ class SevenroomsService
                             // $this->output->writeln("Sevenrooms Availability Time: " . $avail_time['time']);
                             $times[] = [
                                 "time" => $avail_time['time'],
-                                "duration" => isset($avail_time['duration_minutes_by_party_size']) ?? 120,
+                                "duration" => isset($avail_time['duration_minutes_by_party_size']) ? $avail_time['duration_minutes_by_party_size'] : 120,
                                 "payment" => $amount ?? null,
                                 ];
                         }
