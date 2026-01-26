@@ -1,0 +1,1 @@
+user selects items -> book reservation (click on book button) -> create reservation (backend) -> redirects to payment page -> make payment -> validate payment (backend) -> success -> create order (backend) -> update reservation in sevenrooms -> redirect to thank you -> send reservation confirmation email

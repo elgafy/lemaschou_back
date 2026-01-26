@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\OccasionSpecialItems;
+use App\Models\SpecialDays;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Response;
@@ -35,5 +38,6 @@ class AppServiceProvider extends ServiceProvider
                 // Return the response as a JSON object
                 return response()->json($response,$code);
             });
+
     }
 }

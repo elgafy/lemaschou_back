@@ -6,6 +6,8 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Laravel\Prompts\Output\ConsoleOutput;
+use SebastianBergmann\Environment\Console;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckLicence
@@ -17,8 +19,13 @@ class CheckLicence
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $result = Http::get('https://gafystudio.com/check/lemaschou/check.json');
-        $data = $result->json();
+        $response = Http::get('https://gafystudio.com/check/lemaschou/check.json');
+        if ($response->failed()) {
+            $output = new ConsoleOutput();
+            $output->writeln("Check failed: " . $response->status());
+            return next($request);
+        }
+        $data = $response->json();
         $path = request()->path();
         // dump($path);
         $keyword = 'reservation';

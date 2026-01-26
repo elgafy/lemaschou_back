@@ -9,6 +9,8 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -19,8 +21,8 @@ class ReservationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Reservation';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'Reservations Management';
+    protected static ?int $navigationSort = 1;
     protected static ?string $label = 'Reservation';
 
     public static function form(Form $form): Form
@@ -35,7 +37,24 @@ class ReservationResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('first_name')->label('First Name')->searchable(),
+                TextColumn::make('last_name')->label('Last Name')->searchable(),
+                TextColumn::make('email')->label('Email')->searchable(),
+                TextColumn::make('mobile')->label('Mobile')->searchable(),
+                TextColumn::make('date')->label('Date')->date()->sortable(),
+                TextColumn::make('time')->label('Time'),
+                TextColumn::make('guests_count')->label('Guests Count'),
+                IconColumn::make('occasion')
+                ->boolean()
+                ->trueIcon('heroicon-o-check-badge')
+                ->falseIcon('heroicon-o-x-mark'),
+                IconColumn::make('allergic')
+                ->boolean()
+                ->trueIcon('heroicon-o-check-badge')
+                ->falseIcon('heroicon-o-x-mark'),
+                // BooleanColumn::make('occasion')->label('Occasion'),
+                // BooleanColumn::make('allergic')->label('Allergic'),
+                TextColumn::make('created_at')->label('Created At')->dateTime()->sortable()->searchable(),
             ])
             ->filters([
                 //

@@ -61,10 +61,63 @@ class SettingsController extends Controller
         return response()->res(success(), 'assets',  $result, 200);
     }
 
-    public function getReservationSettings() {
-        $result = [
-            'use_external_reservation_link' => Setting::where('key', 'use_reservation_external_link')->first()->value ?? '',
-            'external_reservation_link' => Setting::where('key', 'reservation_link')->first()->value ?? '',
+    // public function getReservationSettings() {
+    //     $result = [
+    //         'use_external_reservation_link' => Setting::where('key', 'use_reservation_external_link')->first()->value ?? '',
+    //         'external_reservation_link' => Setting::where('key', 'reservation_link')->first()->value ?? '',
+    //     ];
+    //     return response()->json([
+    //         'success' => true, // based on the success() function name in your code
+    //         'data' => $result,
+    //     ], 200);
+    // }
+
+    public function getSettings() {
+        $keys = [
+            'use_reservation_external_link',
+            'reservation_link',
+            'sevenrooms_venue_id',
+            'enable_occasions',
+            'enable_occasion_items',
+            'occasion_items_title_en',
+            'occasion_items_title_ar',
+            'occasion_items_notice_en',
+            'occasion_items_notice_ar',
+        ];
+        $reservation_settings = Setting::whereIn('key', $keys)->get()->pluck('value', 'key')->toArray();
+        // dump($reservation_settings);
+        $result = [];
+        $result["assets"] = Asset::select('image','type')->get();
+        $result["reservation"] = $reservation_settings;
+        // $result["reservation"] = [
+        //     'use_external_reservation_link' => Setting::where('key', 'use_reservation_external_link')->first()->value ?? '',
+        //     'external_reservation_link' => Setting::where('key', 'reservation_link')->first()->value ?? '',
+        // ];
+        $ad = Ad::first();
+        if ($ad != null) {
+            $result["ads"] = [
+                'desktop_image' => $ad->image ?? '',
+                'mobile_image' => $ad->image_mobile ?? '',
+                'show_one_time' => $ad->show_one_time=="1"?true:false,
+                'link'=> $ad->link ?? '',
+                'ad_pages'=>AdPage::where('ad_id',$ad->id)->select('page')->get()
+            ];
+        } else {
+            $result["ads"] = null;
+        }
+        // Footer
+        $lang = getLang();
+        // dump($lang);
+        $result["footer"] = [
+            'phone' => Setting::where('key', 'phone')->first()->value ?? '',
+            'email' => Setting::where('key', 'email')->first()->value ?? '',
+            'address' => $lang == "en" ? Setting::where('key', 'address_en')->first()->value : Setting::where('key', 'address_ar')->first()->value,
+            // 'facebook'=>Setting::where('key', 'facebook')->first()->value,
+            'instagram' => Setting::where('key', 'instagram')->first()->value ?? '',
+            // 'twitter'=>Setting::where('key', 'twitter')->first()->value,
+            // 'youtube'=>Setting::where('key', 'youtube')->first()->value,
+            'from' => Carbon::parse(Setting::where('key', 'from')->first()->value)->format('h:i A') ?? '',
+            'to' => Carbon::parse(Setting::where('key', 'to')->first()->value)->format('h:i A') ?? '',
         ];
         return response()->json([
             'success' => true, // based on the success() function name in your code

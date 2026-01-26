@@ -39,7 +39,6 @@ class SettingsPage extends Page
     // public ?string $youtube = '';
     public ?string $from = '';
     public ?string $to = '';
-    public ?string $reservation_link = '';
     public ?string $active_ramadan_menu='';
     // public $video_file; // Define the video_file property
 
@@ -60,7 +59,6 @@ class SettingsPage extends Page
         // $this->video = Setting::where('key', 'video')->first()?->value ?? '';
         $this->from = Setting::where('key', 'from')->first()?->value ?? '';
         $this->to = Setting::where('key', 'to')->first()?->value ?? '';
-        $this->reservation_link = Setting::where('key', 'reservation_link')->first()?->value ?? '';
         $this->active_ramadan_menu = Setting::where('key', 'active_ramadan_menu')->first()?->value ?? '';
     }
 
@@ -80,7 +78,6 @@ class SettingsPage extends Page
             // TextInput::make('video')->label('Video Link')->required()->maxLength(255),
             TimePicker::make('from')->label('Working from')->required()->format('H:i A'),
             TimePicker::make('to')->label('Working to')->required()->format('H:i A'),
-            TextInput::make('reservation_link')->label('Reservation Link')->required()->maxLength(255),
             Forms\Components\Select::make('active_ramadan_menu')
                 ->options([
                     '1' => 'Yes',
@@ -104,7 +101,6 @@ class SettingsPage extends Page
         Setting::updateOrCreate(['key' => 'instagram'], ['value' => $this->instagram]);
         Setting::updateOrCreate(['key' => 'from'], ['value' => $this->from]);
         Setting::updateOrCreate(['key' => 'to'], ['value' => $this->to]);
-        Setting::updateOrCreate(['key' => 'reservation_link'], ['value' => $this->reservation_link]);
         Setting::updateOrCreate(['key' => 'active_ramadan_menu'], ['value' => $this->active_ramadan_menu]);
         Notification::make()
             ->title('Settings updated successfully!')

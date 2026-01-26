@@ -18,14 +18,14 @@ class CategoriesResource extends JsonResource
         $lang = getLang();
         $search = ['-', '&', '!'];
         $replace = [' ', 'and', ''];
-  
+
         return [
             'id' => $this->id,
             // 'name'=>$lang=="en"?$this->name_en:$this->name_ar,
-            // 'grouped'=>$this->grouped=="0"?false:true
+            'grouped'=>$this->grouped == "0" ? false : true,
             'name_en' => str_replace($search, $replace,  $this->name_en),
             'name_ar' => str_replace($search, $replace, $this->name_ar),
-            'grouped' => false,
+            // 'grouped' => false,
             'is_ramadan' => $this->is_ramadan == "1" ? true : false,
             'title_en' => $this->title_en!=null ?$this->title_en:"",
             'title_ar' => $this->title_ar!=null ?$this->title_ar:"",

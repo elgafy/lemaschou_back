@@ -3,8 +3,13 @@
 
         {{ $this->form }}
 
-        <x-filament::button type="submit" class="my-4">
-            Save
+        <x-filament::button wire:click="submit" wire:loading.attr="disabled" class="my-4">
+            <span wire:loading.remove wire:target="submit">
+                Save
+            </span>
+            <span wire:loading class="flex items-center gap-1">
+                Saving
+            </span>
         </x-filament::button>
     </form>
 </x-filament::page>

@@ -41,6 +41,11 @@ class SeoPage extends Page
     public ?string $keywords_faq_en = '';
     public ?string $keywords_faq_ar = '';
 
+    public ?string $desc_reservation_en = '';
+    public ?string $desc_reservation_ar = '';
+    public ?string $keywords_reservation_en = '';
+    public ?string $keywords_reservation_ar = '';
+
     public function mount(): void
     {
         // Load settings from the database
@@ -63,6 +68,11 @@ class SeoPage extends Page
         $this->desc_faq_ar = Seo::where('key', 'desc_faq_ar')->first()?->value ?? '';
         $this->keywords_faq_en = Seo::where('key', 'keywords_faq_en')->first()?->value ?? '';
         $this->keywords_faq_ar = Seo::where('key', 'keywords_faq_ar')->first()?->value ?? '';
+
+        $this->desc_reservation_en = Seo::where('key', 'desc_reservation_en')->first()?->value ?? '';
+        $this->desc_reservation_ar = Seo::where('key', 'desc_reservation_ar')->first()?->value ?? '';
+        $this->keywords_reservation_en = Seo::where('key', 'keywords_reservation_en')->first()?->value ?? '';
+        $this->keywords_reservation_ar = Seo::where('key', 'keywords_reservation_ar')->first()?->value ?? '';
     }
 
     protected function getFormSchema(): array
@@ -110,8 +120,19 @@ class SeoPage extends Page
                     ->label('Keywords faq in English')
                     ->placeholder('Add tags like sssss,sssss')
                     ->required(),
-                    TextInput::make('keywords_faq_ar')
+                TextInput::make('keywords_faq_ar')
                     ->label('Keywords faq in Arabic')
+                    ->placeholder('Add tags like sssss,sssss')
+                    ->required(),
+
+                Textarea::make('desc_reservation_en')->label('Description reservation in English')->required()->rows(10),
+                Textarea::make('desc_reservation_ar')->label('Description reservation in Arabic')->required()->rows(10),
+                TextInput::make('keywords_reservation_en')
+                    ->label('Keywords reservation in English')
+                    ->placeholder('Add tags like sssss,sssss')
+                    ->required(),
+                TextInput::make('keywords_reservation_ar')
+                    ->label('Keywords reservation in Arabic')
                     ->placeholder('Add tags like sssss,sssss')
                     ->required(),
         ];
@@ -140,6 +161,11 @@ class SeoPage extends Page
         Seo::updateOrCreate(['key' => 'keywords_faq_en'], ['value' => $this->keywords_faq_en]);
         Seo::updateOrCreate(['key' => 'keywords_faq_ar'], ['value' => $this->keywords_faq_ar]);
 
+        Seo::updateOrCreate(['key' => 'desc_reservation_en'], ['value' => $this->desc_reservation_en]);
+        Seo::updateOrCreate(['key' => 'desc_reservation_ar'], ['value' => $this->desc_reservation_ar]);
+        Seo::updateOrCreate(['key' => 'keywords_reservation_en'], ['value' => $this->keywords_reservation_en]);
+        Seo::updateOrCreate(['key' => 'keywords_reservation_ar'], ['value' => $this->keywords_reservation_ar]);
+
         Notification::make()
             ->title('Seo settings updated successfully!')
             ->success()
@@ -151,5 +177,5 @@ class SeoPage extends Page
         $user = Filament::auth()->user();
         return $user ? $user->can('page_SeoPage') : false;
     }
-    
+
 }

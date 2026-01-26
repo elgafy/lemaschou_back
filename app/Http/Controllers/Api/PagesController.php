@@ -34,6 +34,7 @@ class PagesController extends Controller
     public function home()
     {
         $lang = getLang();
+        $reservationLink = Setting::where('key', 'use_reservation_external_link')->first()->value ? (Setting::where('key', 'reservation_link')->first()->value ?? $lang . '/reservation') : $lang . '/reservation';
         if ($lang == "en") {
             $homeDescSeo = Seo::where('key', 'desc_home_en')->first()->value ?? '';
             $homeKeywordsSeo = Seo::where('key', 'keywords_home_en')->first()->value ?? '';
@@ -45,7 +46,7 @@ class PagesController extends Controller
         }
         $menuImage = MenuImage::first()->image ?? '';
         $video = Video::first()->video ?? '';
-        $reservationLink = Setting::where('key', 'reservation_link')->first()->value ?? '';
+        // $reservationLink = Setting::where('key', 'reservation_link')->first()->value ?? '';
 
         $venues = Venue::where('status', '1')->select('id', 'image', 'is_main')->take(3)->latest()->get();
         $testimonials = Testimonial::where('status', '1')->take(3)->get();
@@ -157,23 +158,24 @@ class PagesController extends Controller
             return response()->res(success(), 'menu_reuqest',  $data, 200);
         } else {
             // echo "Today is NOT in Ramadan.";
-            $output->writeln("Get Categories");
             $categories = Category::where('status', '1')->where('is_ramadan', '0')->where('is_menu', '1')->orderBy('order')->get();
-            $output->writeln("Get Categories DONE");
             $getCategories = Category::where('status', '1')->where('is_ramadan', '0')->where('is_menu', '1')->orderBy('order')->pluck('id');
-            $output->writeln("Get Meals");
             $meals = Meal::whereIn('category_id', $getCategories)
             ->where('status', '1')->where('is_ramadan', '0')->where('is_menu', '1')->orderBy('order')->get();
-            $output->writeln("Get Meals DONE");
             // $data = [
             //     'categories' => CategoriesResource::collection($categories),
             //     'meals' => MealsResource::collection($meals)
             // ];
             // return response()->res(success(), 'menu_reuqest',  $data, 200);
-            return response()->json([
-                'success' => true, // based on the success() function name in your code
-                'data' => ['categories' => $categories, 'meals' => $meals],
-            ], 200);
+            // return response()->json([
+            //     'success' => true, // based on the success() function name in your code
+            //     'data' => ['categories' => $categories, 'meals' => $meals],
+            // ], 200);
+            $data = [
+                'categories' => CategoriesResource::collection($categories),
+                'meals' => MealsResource::collection($meals)
+            ];
+            return response()->res(success(), 'menu_reuqest',  $data, 200);
         }
     }
 
@@ -194,6 +196,74 @@ class PagesController extends Controller
             'faqs' => FaqsResource::collection($faqs)
         ];
         return response()->res(success(), 'faq_page',  $data, 200);
+
+    }
+
+    public function terms()
+    {
+        $lang = getLang();
+        if ($lang == "en") {
+            $termsDescSeo = Seo::where('key', 'desc_terms_en')->first()->value ?? '';
+            $termsKeywordsSeo = Seo::where('key', 'keywords_terms_en')->first()->value ?? '';
+            $termsTitle = Setting::where('key', 'privacy_terms_page_title_en')->first()->value ?? '';
+            $termsContent = Setting::where('key', 'privacy_terms_page_content_en')->first()->value ?? '';
+        } else {
+            $termsDescSeo = Seo::where('key', 'desc_terms_ar')->first()->value ?? '';
+            $termsKeywordsSeo = Seo::where('key', 'keywords_terms_ar')->first()->value ?? '';
+            $termsTitle = Setting::where('key', 'privacy_terms_page_title_ar')->first()->value ?? '';
+            $termsContent = Setting::where('key', 'privacy_terms_page_content_ar')->first()->value ?? '';
+        }
+        $data = [
+            'desc_terms_seo' => $termsDescSeo,
+            'keywords_terms_seo' => $termsKeywordsSeo,
+            'title' => $termsTitle,
+            'content' => $termsContent
+        ];
+        $output = new ConsoleOutput();
+        $output->writeln("Terms data: " . json_encode($data));
+        return response()->res(success(), 'terms_page',  $data, 200);
+
+    }
+    public function paymentPolicy()
+    {
+        $lang = getLang();
+        if ($lang == "en") {
+            $payment_policyDescSeo = Seo::where('key', 'desc_payment_policy_en')->first()->value ?? '';
+            $payment_policyKeywordsSeo = Seo::where('key', 'keywords_payment_policy_en')->first()->value ?? '';
+            $payment_policyTitle = Setting::where('key', 'payment_terms_page_title_en')->first()->value ?? '';
+            $payment_policyContent = Setting::where('key', 'payment_terms_page_content_en')->first()->value ?? '';
+        } else {
+            $payment_policyDescSeo = Seo::where('key', 'desc_payment_policy_ar')->first()->value ?? '';
+            $payment_policyKeywordsSeo = Seo::where('key', 'keywords_payment_policy_ar')->first()->value ?? '';
+            $payment_policyTitle = Setting::where('key', 'payment_terms_page_title_ar')->first()->value ?? '';
+            $payment_policyContent = Setting::where('key', 'payment_terms_page_content_ar')->first()->value ?? '';
+        }
+        $data = [
+            'desc_payment_policy_seo' => $payment_policyDescSeo,
+            'keywords_payment_policy_seo' => $payment_policyKeywordsSeo,
+            'title' => $payment_policyTitle,
+            'content' => $payment_policyContent
+        ];
+        $output = new ConsoleOutput();
+        $output->writeln("payment_policy data: " . json_encode($data));
+        return response()->res(success(), 'payment_policy_page',  $data, 200);
+
+    }
+    public function reservation()
+    {
+        $lang = getLang();
+        if ($lang == "en") {
+            $reservationDescSeo = Seo::where('key', 'desc_reservation_en')->first()->value ?? '';
+            $reservationKeywordsSeo = Seo::where('key', 'keywords_reservation_en')->first()->value ?? '';
+        } else {
+            $reservationDescSeo = Seo::where('key', 'desc_reservation_ar')->first()->value ?? '';
+            $reservationKeywordsSeo = Seo::where('key', 'keywords_reservation_ar')->first()->value ?? '';
+        }
+        $data = [
+            'desc_reservation_seo' => $reservationDescSeo,
+            'keywords_reservation_seo' => $reservationKeywordsSeo,
+        ];
+        return response()->res(success(), 'reservation_page',  $data, 200);
 
     }
 }
