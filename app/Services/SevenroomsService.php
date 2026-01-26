@@ -93,9 +93,9 @@ class SevenroomsService
             'party_size' => $guests,
         ]);
         // $date_formatted = Carbon::createFromFormat('Y-m-d', $date);
-        $this->output->writeln("Api Token: " . $this->token);
+        // $this->output->writeln("Api Token: " . $this->token);
         $special_day = SpecialDays::where('date', $date)->first();
-        $this->output->writeln("Special Day for " . $date . ": " . $special_day);
+        // $this->output->writeln("Special Day for " . $date . ": " . $special_day);
         try {
             // $this->output->writeln("Sevenrooms Availability Request Query: " . $query);
             $response = Http::withHeaders([
@@ -113,9 +113,10 @@ class SevenroomsService
                         }
                         for ($i = 0; $i < count($shift['times']); $i++) {
                             $avail_time = $shift['times'][$i];
+                            // $this->output->writeln("Sevenrooms Availability Time: " . $avail_time['time']);
                             $times[] = [
                                 "time" => $avail_time['time'],
-                                "duration" => $avail_time['duration_minutes_by_party_size'],
+                                "duration" => isset($avail_time['duration_minutes_by_party_size']) ?? 120,
                                 "payment" => $amount ?? null,
                                 ];
                         }
