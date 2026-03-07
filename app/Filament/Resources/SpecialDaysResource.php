@@ -44,11 +44,9 @@ class SpecialDaysResource extends Resource
                     ->maxLength(255),
                 Textarea::make('description_en')
                     ->label('Description in english')
-                    ->required()
                     ->maxLength(255),
                 Textarea::make('description_ar')
                     ->label('Description in arabic')
-                    ->required()
                     ->maxLength(255),
                 TextInput::make('lunch_shift_payment_amount')
                     ->label('Lunch Shift Payment Amount')

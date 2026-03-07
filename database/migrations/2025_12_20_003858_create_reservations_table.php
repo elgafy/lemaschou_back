@@ -29,6 +29,7 @@ return new class extends Migration
             $table->json('food_allergies')->nullable();
             $table->boolean('terms_accepted')->default(false);
             $table->boolean('payment_terms_accepted')->default(false);
+            $table->decimal('deposite', 10, 2)->nullable();
             $table->foreignId('order_id')->nullable()->constrained();
             $table->string('sevenrooms_reservation_id')->nullable();
             $table->json('options')->nullable();

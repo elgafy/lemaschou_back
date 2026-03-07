@@ -23,6 +23,7 @@ class Reservation extends Model
             'allergic',
             'food_allergies',
             'terms_accepted',
+            'deposite',
             'payment_terms_accepted',
             'options'
     ];
@@ -32,4 +33,8 @@ class Reservation extends Model
         'food_allergies' => 'array',
         'options' => 'array',
     ];
+
+    public function Order() {
+        return $this->belongsTo(Order::class);
+    }
 }

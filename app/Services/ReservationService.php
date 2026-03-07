@@ -2,13 +2,12 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use App\Models\OccasionSpecialItems;
 use App\Models\OccasionSpecialItemsCategory;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Setting;
+use App\Models\SpecialDays;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -60,7 +59,7 @@ class ReservationService
         ], 200);
     }
     public function makeReservation(Request $request) {
-        Log::info("Making reservation with data: " . json_encode($request->all()));
+        Log::alert("Making reservation with data: " . json_encode($request->all()));
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string|max:10',
@@ -74,6 +73,7 @@ class ReservationService
             'occasionType' => 'nullable|string|max:255',
             'occasionSelectedItems' => 'nullable|string|max:255',
             'occasionItemsPrice' => 'nullable|numeric',
+            'deposite' => 'nullable|numeric',
             'cardContent' => 'nullable|string|max:255',
             'allergic' => 'nullable|string|max:5',
             'allergies' => 'nullable|string|max:255',
@@ -83,6 +83,7 @@ class ReservationService
         $this->output->writeln("Validated occasion: " . $validated['occasion']);
         $this->output->writeln("Validated occasionSelectedItems: " . json_encode($validated['occasionSelectedItems']));
         $this->output->writeln("Validated allergies: " . $validated['allergies']);
+        $this->output->writeln("Validated deposite: " . $validated['deposite']);
         // Create the reservation local database
         $reservation = Reservation::create([
             'date' => $validated['date'],
@@ -100,6 +101,7 @@ class ReservationService
             'food_allergies' => $validated['allergic'] == true ? (isset($validated['allergies']) ? explode(',', $validated['allergies']) : null) : null,
             'terms_accepted' => $validated['termsAccepted'] === 'true' ? true : false,
             'payment_terms_accepted' => $validated['paymentPolicyAccepted'] === 'true' ? true : false,
+            'deposite' => $validated['deposite'],
             'options' => $validated['cardContent'] ? [
                 'card_content' => $validated['cardContent'],
             ] : null,
@@ -116,9 +118,10 @@ class ReservationService
         $this->output->writeln("user id: " . $user->id);
         $token = $user->createToken('api-token-reservation-booking')->plainTextToken;
         $this->output->writeln("Authenticated user token: " . $token);
+        // if special day, add special day deposite to order
 
         // Create an order if there are occasion items selected
-        if ($validated['occasion']  == true && isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '') {
+        if (($validated['occasion']  == true && isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '') ) {
             $items_ids = explode(',', $validated['occasionSelectedItems']);
             $items = [];
             foreach ($items_ids as $item_id) {
@@ -155,10 +158,6 @@ class ReservationService
                     'quantity'      => 1,
                     'price'         => $item->price,
                 ]);
-                // $order->items()->attach( $item->id, [
-                //     'quantity' => 1,
-                //     'price' => $item->price,
-                // ]);
             }
             $reservation->order_id = $order->id;
             $reservation->save();
@@ -167,7 +166,34 @@ class ReservationService
             $this->output->writeln("Order items: " . $order->items);
         }
 
+        if ($validated['deposite']) {
+            if (!isset($order)) {
+                $order = Order::create([
+                    "user_id" => $user->id,
+                    "user_email" => $user->email,
+                    "status" => "pending",
+                    "payment_processor" => "sevenrooms",
+                    "payment_reference" => "",
+                ]);
+            }
+            $special_day = SpecialDays::where('date', $reservation->date)->first();
+            $order->items()->create([
+                    'itemable_id'   => $special_day->id,
+                    'itemable_type' => SpecialDays::class,
+                    'quantity'      => 1,
+                    'price'         => $validated['deposite'],
+                    'total'         => $validated['deposite'],
+                ]);
+            $order->price = $validated['deposite'] + $order->price;
+            $order->total = $validated['deposite'] + $order->total;
+            $order->save();
+            $reservation->order_id = $order->id;
+            $reservation->save();
+        }
+
         $this->output->writeln("Created reservation id: " . $reservation->id);
+        $this->output->writeln("Created reservation order: " . $reservation->order);
+        if ($reservation->order) $this->output->writeln("Created reservation items: " . $reservation->order->items);
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];
     }
 }

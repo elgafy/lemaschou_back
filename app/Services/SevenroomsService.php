@@ -162,7 +162,7 @@ class SevenroomsService
             $tags .= "Special Occasions:".$reservation['occasion_type'].",";
         }
         // Add notes
-        $notes = "API TEST ";
+        $notes = "API TEST \n";
         if ($reservation['special_request']) {
             $notes .= "Special Requests: " . $reservation['special_request'] . ". \n";
         }
@@ -170,11 +170,23 @@ class SevenroomsService
             $notes .= "Gift Card Content: " . $reservation['options']['card_content'] . ". \n";
         }
 
+        if ($reservation['order_id']) {
+            $order = Order::find($reservation['order_id']);
+            $order_total = $order->total;
+            $notes .= "Payment Total Amount: " . $order_total . " SAR. \n";
+            if ($order->payment_status == "pending") {
+                $tags .= "Payments:Processing,";
+            }
+            if ($order->payment_status == "completed") {
+                $tags .= "Payments:Payed,";
+            }
+        }
+
         $this->output->writeln("Tags: " . $tags);
         $this->output->writeln("Notes: " . $notes);
         $venue_id = Setting::where('key', 'sevenrooms_venue_id')->first()->value;
         $query = http_build_query([
-                'date' => "26-01-2026",
+                'date' => $reservation->date,
                 'time' => $reservation->time,
                 'party_size' => $reservation->guests_count,
                 'first_name' => $reservation->first_name,

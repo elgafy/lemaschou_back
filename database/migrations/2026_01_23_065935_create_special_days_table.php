@@ -16,8 +16,8 @@ return new class extends Migration
             $table->date('date')->unique();
             $table->string('name_en');
             $table->string('name_ar');
-            $table->string('description_en');
-            $table->string('description_ar');
+            $table->string('description_en')->nullable();
+            $table->string('description_ar')->nullable();
             $table->decimal('lunch_shift_payment_amount', 10, 0);
             $table->decimal('dinner_shift_payment_amount', 10, 0);
             $table->timestamps();

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->decimal('vat', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
+            $table->decimal('deposite', 10, 2)->nullable();
             $table->string('payment_processor')->nullable();
             $table->string('payment_reference')->nullable();
             $table->timestamps();

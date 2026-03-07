@@ -6,6 +6,8 @@ use App\Filament\Resources\ReservationResource\Pages;
 use App\Filament\Resources\ReservationResource\RelationManagers;
 use App\Models\Reservation;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -29,7 +31,13 @@ class ReservationResource extends Resource
     {
         return $form
             ->schema([
-                //
+                TextInput::make('first_name')->label('First Name')->required(),
+                TextInput::make('last_name')->label('Last Name')->required(),
+                TextInput::make('email')->label('Email')->required(),
+                TextInput::make('mobile')->label('Mobile')->required(),
+                DatePicker::make('date')->label('Date')->required(),
+                TextInput::make('time')->label('Time')->required(),
+                TextInput::make('guests_count')->label('Guests Count')->required(),
             ]);
     }
 
@@ -37,6 +45,8 @@ class ReservationResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('sevenrooms_reservation_id')->label('Sevenrooms Reservation ID')->sortable()->searchable(),
+                TextColumn::make('order.id')->label('Order ID')->sortable()->searchable(),
                 TextColumn::make('first_name')->label('First Name')->searchable(),
                 TextColumn::make('last_name')->label('Last Name')->searchable(),
                 TextColumn::make('email')->label('Email')->searchable(),
@@ -61,6 +71,8 @@ class ReservationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -80,8 +92,9 @@ class ReservationResource extends Resource
     {
         return [
             'index' => Pages\ListReservations::route('/'),
-            'create' => Pages\CreateReservation::route('/create'),
+            // 'create' => Pages\CreateReservation::route('/create'),
             'edit' => Pages\EditReservation::route('/{record}/edit'),
+            'view' => Pages\ViewReservation::route('/{record}'),
         ];
     }
 }

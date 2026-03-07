@@ -67,11 +67,12 @@ class ReservationController extends Controller
     public function getOccasionItems() {
         $items = OccasionSpecialItemsCategory::with('items')->get();
         return response()->json([
-            'success' => true, // based on the success() function name in your code
+            'success' => true,
             'data' => $items,
         ], 200);
     }
 
+    // Booking endpoint
     public function book(Request $request) {
         $output = new ConsoleOutput();
         $output->writeln($request->all());
@@ -83,18 +84,18 @@ class ReservationController extends Controller
         $token = $result['token'];
         $order = $result['order'];
 
-        $output->writeln("Reservation created: " . $reservation);
-        $output->writeln("User created: " . $user);
-        $output->writeln("Token created: " . $token);
-        $output->writeln("Order created: " . $order);
+        // $output->writeln("Reservation created: " . $reservation);
+        // $output->writeln("User created: " . $user);
+        // $output->writeln("Token created: " . $token);
+        // $output->writeln("Order created: " . $order);
 
 
 
         // Create the reservation in Sevenrooms system
-        // $this->sevenroomsService->sevenroomsBook($reservation, $user);
+        $this->sevenroomsService->sevenroomsBook($reservation, $user);
 
         return response()->json([
-            'success' => true, // based on the success() function name in your code
+            'success' => true,
             'data' => [
                 // "reservation_id" => $reservation->id,
                 "user_token" => $token,
