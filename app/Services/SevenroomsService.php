@@ -166,7 +166,7 @@ class SevenroomsService
         if ($reservation['special_request']) {
             $notes .= "Special Requests: " . $reservation['special_request'] . ". \n";
         }
-        if ($reservation['options']['card_content']) {
+        if (isset($reservation['options']['card_content'])) {
             $notes .= "Gift Card Content: " . $reservation['options']['card_content'] . ". \n";
         }
 
