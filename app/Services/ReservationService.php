@@ -43,6 +43,8 @@ class ReservationService
             'occasion_items_title_ar',
             'occasion_items_notice_en',
             'occasion_items_notice_ar',
+            'booking_notice_en',
+            'booking_notice_ar',
         ];
         $reservation_settings = Setting::whereIn('key', $keys)->get()->pluck('value', 'key')->toArray();
         $occasions = json_decode(Setting::where('key', 'occasions')->first()?->value ?? '', true) ?? [];

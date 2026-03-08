@@ -35,6 +35,8 @@ class ReservationsSettings extends Page
     public ?string $enable_occasion_items_payment = '';
     public ?string $add_calculated_vat = '';
     public ?string $vat_value = '';
+    public ?string $booking_notice_en = '';
+    public ?string $booking_notice_ar = '';
     public ?string $occasion_items_title_en = '';
     public ?string $occasion_items_title_ar = '';
     public ?string $occasion_items_notice_en = '';
@@ -55,6 +57,8 @@ class ReservationsSettings extends Page
         $this->enable_occasion_items_payment = Setting::where('key', 'enable_occasion_items_payment')->first()?->value ?? '';
         $this->add_calculated_vat = Setting::where('key', 'add_calculated_vat')->first()?->value ?? false;
         $this->vat_value = Setting::where('key', 'vat_value')->first()?->value ?? false;
+        $this->booking_notice_en = Setting::where('key', 'booking_notice_en')->first()?->value ?? '';
+        $this->booking_notice_ar = Setting::where('key', 'booking_notice_ar')->first()?->value ?? '';
         $this->occasion_items_title_en = Setting::where('key', 'occasion_items_title_en')->first()?->value ?? '';
         $this->occasion_items_title_ar = Setting::where('key', 'occasion_items_title_ar')->first()?->value ?? '';
         $this->occasion_items_notice_en = Setting::where('key', 'occasion_items_notice_en')->first()?->value ?? '';
@@ -116,6 +120,14 @@ class ReservationsSettings extends Page
                 'xl' => 3,
             ])
             ->schema([
+                Fieldset::make('Booking Popup Notice - Drinks and desserts policy ')
+                ->schema([
+                    Textarea::make('booking_notice_en')->label('Notice in English')->required(),
+                    Textarea::make('booking_notice_ar')->label('Notice in Arabic')->required(),
+                ])->columns([
+                    'xs' => 1,
+                    'sm' => 2,
+                ]),
                 Fieldset::make('Special Occaasion Items Title')
                 ->schema([
                     TextInput::make('occasion_items_title_en')->label('Title in English')->required(),
@@ -148,6 +160,8 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'enable_occasion_items_payment'], ['value' => $this->enable_occasion_items_payment]);
         Setting::updateOrCreate(['key' => 'add_calculated_vat'], ['value' => $this->add_calculated_vat]);
         Setting::updateOrCreate(['key' => 'vat_value'], ['value' => $this->vat_value]);
+        Setting::updateOrCreate(['key' => 'booking_notice_en'], ['value' => $this->booking_notice_en]);
+        Setting::updateOrCreate(['key' => 'booking_notice_ar'], ['value' => $this->booking_notice_ar]);
         Setting::updateOrCreate(['key' => 'occasion_items_title_en'], ['value' => $this->occasion_items_title_en]);
         Setting::updateOrCreate(['key' => 'occasion_items_title_ar'], ['value' => $this->occasion_items_title_ar]);
         Setting::updateOrCreate(['key' => 'occasion_items_notice_en'], ['value' => $this->occasion_items_notice_en]);
