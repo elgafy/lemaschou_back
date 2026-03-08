@@ -59,7 +59,7 @@ class ReservationService
         ], 200);
     }
     public function makeReservation(Request $request) {
-        Log::info("Making reservation with data: " . json_encode($request->all()));
+        Log::alert("Making reservation with data: " . json_encode($request->all()));
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string|max:10',
@@ -194,8 +194,8 @@ class ReservationService
         $this->output->writeln("Created reservation id: " . $reservation->id);
         $this->output->writeln("Created reservation order: " . $reservation->order);
         if ($reservation->order) $this->output->writeln("Created reservation items: " . $reservation->order->items);
-        Log::info("Created reservation with data: " . json_encode($reservation));
-        if ($reservation->order) Log::info("Created reservation order with data: " . json_encode($reservation->order) . " and items: " . json_encode($reservation->order->items));
+        Log::alert("Created reservation with data: " . json_encode($reservation));
+        if ($reservation->order) Log::alert("Created reservation order with data: " . json_encode($reservation->order) . " and items: " . json_encode($reservation->order->items));
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];
     }
 }
