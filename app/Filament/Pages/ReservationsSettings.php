@@ -29,8 +29,6 @@ class ReservationsSettings extends Page
     public ?string $booking_time_window = '';
     public ?int $booking_min_guests = 2;
     public ?int $booking_max_guests = 12;
-    public ?string $seating_time_en = '';
-    public ?string $seating_time_ar = '';
     public ?string $sevenrooms_venue_id = '';
     public ?string $enable_occasions = '';
     public ?string $enable_occasion_items = '';
@@ -49,10 +47,8 @@ class ReservationsSettings extends Page
         $this->use_reservation_external_link = Setting::where('key', 'use_reservation_external_link')->first()?->value ?? '';
         $this->reservation_link = Setting::where('key', 'reservation_link')->first()?->value ?? '';
         $this->booking_time_window = Setting::where('key', 'booking_time_window')->first()?->value ?? '';
-        $this->seating_time_en = Setting::where('key', 'seating_time_en')->first()?->value ?? '';
         $this->booking_min_guests = Setting::where('key', 'booking_min_guests')->first()?->value ?? 2;
         $this->booking_max_guests = Setting::where('key', 'booking_max_guests')->first()?->value ?? 12;
-        $this->seating_time_ar = Setting::where('key', 'seating_time_ar')->first()?->value ?? '';
         $this->sevenrooms_venue_id = Setting::where('key', 'sevenrooms_venue_id')->first()?->value ?? '';
         $this->enable_occasions = Setting::where('key', 'enable_occasions')->first()?->value ?? '';
         $this->enable_occasion_items = Setting::where('key', 'enable_occasion_items')->first()?->value ?? '';
@@ -76,14 +72,6 @@ class ReservationsSettings extends Page
                 ->schema([
                     TextInput::make('booking_min_guests')->label('Minimum Guests')->numeric()->integer()->minValue(1)->required(),
                     TextInput::make('booking_max_guests')->label('Maximum Guests')->numeric()->integer()->minValue(1)->required(),
-                ])->columns([
-                    'xs' => 1,
-                    'sm' => 2,
-                ]),
-            Fieldset::make('Seating Time')
-                ->schema([
-                    TextInput::make('seating_time_en')->label('Reservation Seating Time in English')->required(),
-                    TextInput::make('seating_time_ar')->label('Reservation Seating Time in Arabic')->required(),
                 ])->columns([
                     'xs' => 1,
                     'sm' => 2,
@@ -155,8 +143,6 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'booking_min_guests'], ['value' => $this->booking_min_guests]);
         Setting::updateOrCreate(['key' => 'booking_max_guests'], ['value' => $this->booking_max_guests]);
         Setting::updateOrCreate(['key' => 'sevenrooms_venue_id'], ['value' => $this->sevenrooms_venue_id]);
-        Setting::updateOrCreate(['key' => 'seating_time_en'], ['value' => $this->seating_time_en]);
-        Setting::updateOrCreate(['key' => 'seating_time_ar'], ['value' => $this->seating_time_ar]);
         Setting::updateOrCreate(['key' => 'enable_occasions'], ['value' => $this->enable_occasions]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items'], ['value' => $this->enable_occasion_items]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items_payment'], ['value' => $this->enable_occasion_items_payment]);
