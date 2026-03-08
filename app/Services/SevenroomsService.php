@@ -148,7 +148,7 @@ class SevenroomsService
     public function sevenroomsBook($reservation, $user) {
         // Implement booking logic here
         $this->output->writeln("Sevenrooms Booking Request for Reservation: " . $reservation);
-        Log::info("Sevenrooms Booking Request for Reservation: " . json_encode($reservation));
+        Log::alert("Sevenrooms Booking Request for Reservation: " . json_encode($reservation));
         $tags = "";
         // Add occasion food allergies to tags
         if ($reservation['food_allergies']) {
@@ -214,7 +214,7 @@ class SevenroomsService
         if ($response["status"] == 200) {
             $reservation->sevenrooms_reservation_id = $response['data']['reservation_reference_code'];
             $reservation->save();
-            Log::info("Sevenrooms Booking Created successfully for Reservation: " . json_encode($reservation) . " with Sevenrooms Reservation ID: " . $reservation->sevenrooms_reservation_id);
+            Log::alert("Sevenrooms Booking Created successfully for Reservation: " . json_encode($reservation) . " with Sevenrooms Reservation ID: " . $reservation->sevenrooms_reservation_id);
             return response()->json([
                 'success' => true,
                 'data' => $response['data'],
