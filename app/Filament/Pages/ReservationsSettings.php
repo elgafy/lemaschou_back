@@ -35,7 +35,7 @@ class ReservationsSettings extends Page
     public ?string $enable_occasion_items_payment = '';
     public ?string $add_calculated_vat = '';
     public ?string $vat_value = '';
-    public ?string $enable_booking_notice = true;
+    public ?string $enable_booking_notice = '';
     public ?string $booking_notice_en = '';
     public ?string $booking_notice_ar = '';
     public ?string $occasion_items_title_en = '';
