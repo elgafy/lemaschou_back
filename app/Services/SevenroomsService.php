@@ -14,6 +14,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Output\ConsoleOutput;
 
@@ -147,7 +148,7 @@ class SevenroomsService
     public function sevenroomsBook($reservation, $user) {
         // Implement booking logic here
         $this->output->writeln("Sevenrooms Booking Request for Reservation: " . $reservation);
-
+        Log::info("Sevenrooms Booking Request for Reservation: " . json_encode($reservation));
         $tags = "";
         // Add occasion food allergies to tags
         if ($reservation['food_allergies']) {
@@ -213,11 +214,13 @@ class SevenroomsService
         if ($response["status"] == 200) {
             $reservation->sevenrooms_reservation_id = $response['data']['reservation_reference_code'];
             $reservation->save();
+            Log::info("Sevenrooms Booking Created successfully for Reservation: " . json_encode($reservation) . " with Sevenrooms Reservation ID: " . $reservation->sevenrooms_reservation_id);
             return response()->json([
                 'success' => true,
                 'data' => $response['data'],
             ], 200);
         } else {
+            Log::alert("Sevenrooms Booking Failed for Reservation: " . json_encode($reservation) . " with message: " . json_encode($response));
             return response()->json([
                 'success' => false,
                 'data' => json_encode($response),
