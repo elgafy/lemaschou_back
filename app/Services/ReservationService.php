@@ -43,6 +43,7 @@ class ReservationService
             'occasion_items_title_ar',
             'occasion_items_notice_en',
             'occasion_items_notice_ar',
+            'enable_booking_notice',
             'booking_notice_en',
             'booking_notice_ar',
         ];
