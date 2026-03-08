@@ -35,6 +35,7 @@ class ReservationsSettings extends Page
     public ?string $enable_occasion_items_payment = '';
     public ?string $add_calculated_vat = '';
     public ?string $vat_value = '';
+    public ?string $enable_booking_notice = true;
     public ?string $booking_notice_en = '';
     public ?string $booking_notice_ar = '';
     public ?string $occasion_items_title_en = '';
@@ -57,6 +58,7 @@ class ReservationsSettings extends Page
         $this->enable_occasion_items_payment = Setting::where('key', 'enable_occasion_items_payment')->first()?->value ?? '';
         $this->add_calculated_vat = Setting::where('key', 'add_calculated_vat')->first()?->value ?? false;
         $this->vat_value = Setting::where('key', 'vat_value')->first()?->value ?? false;
+        $this->enable_booking_notice = Setting::where('key', 'enable_booking_notice')->first()?->value ?? true;
         $this->booking_notice_en = Setting::where('key', 'booking_notice_en')->first()?->value ?? '';
         $this->booking_notice_ar = Setting::where('key', 'booking_notice_ar')->first()?->value ?? '';
         $this->occasion_items_title_en = Setting::where('key', 'occasion_items_title_en')->first()?->value ?? '';
@@ -80,6 +82,8 @@ class ReservationsSettings extends Page
                     'xs' => 1,
                     'sm' => 2,
                 ]),
+            Toggle::make('enable_booking_notice')->label('Enable Booking Notice Popup')
+            ->helperText('Enable popup to inform customers with drinks and desserts policy.'),
             Toggle::make('enable_occasions')->label('Enable Special Occassions')
             ->helperText('Enable occasions selection, like Wedding, Business, Date Night etc.'),
             Toggle::make('enable_occasion_items')->label('Enable Special Occassion Items')
@@ -155,6 +159,7 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'booking_min_guests'], ['value' => $this->booking_min_guests]);
         Setting::updateOrCreate(['key' => 'booking_max_guests'], ['value' => $this->booking_max_guests]);
         Setting::updateOrCreate(['key' => 'sevenrooms_venue_id'], ['value' => $this->sevenrooms_venue_id]);
+        Setting::updateOrCreate(['key' => 'enable_booking_notice'], ['value' => $this->enable_booking_notice]);
         Setting::updateOrCreate(['key' => 'enable_occasions'], ['value' => $this->enable_occasions]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items'], ['value' => $this->enable_occasion_items]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items_payment'], ['value' => $this->enable_occasion_items_payment]);
