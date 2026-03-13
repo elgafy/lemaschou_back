@@ -68,11 +68,12 @@ class OccasionSpecialItemsResource extends Resource
                     ->required()
                     ->numeric()
                     ->minValue('0'),
-                TimePicker::make('avaialable_before_time')
+                TextInput::make('available_before_time')
                     ->label('Available Before Hour')
-                    ->helperText('What hour before the reservation time the item is available for reservation')
-                    ->seconds(false)
-                    ->timezone('Asia/Riyadh'),
+                    ->helperText('What hour in 24 hours format, before the booking time; the item is available for reservation, e.g. if the booking time is 20:00 and you set this field to 18:00, the item will not be available for reservation after 18:00')
+                    ->numeric()
+                    ->minValue('0')
+                    ->default('13'),
                 FileUpload::make('image')
                 ->disk('s3')
                 ->columns(1)

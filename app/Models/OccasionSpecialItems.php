@@ -13,6 +13,7 @@ class OccasionSpecialItems extends Model
         'description_ar',
         'price',
         'reservation_availability_period',
+        'available_before_time',
         'category',
         'image',
         // 'enable_card'
