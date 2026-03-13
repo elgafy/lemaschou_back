@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('description_ar');
             $table->unsignedInteger('price');
             $table->unsignedInteger('reservation_availability_period')->default(0);
+            // $table->time('available_before_time')->nullable();
             $table->foreignId('category')->constrained('occasion_special_items_categories', 'id');
             $table->string('image');
             $table->timestamps();

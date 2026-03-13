@@ -10,6 +10,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -67,6 +68,11 @@ class OccasionSpecialItemsResource extends Resource
                     ->required()
                     ->numeric()
                     ->minValue('0'),
+                TimePicker::make('avaialable_before_time')
+                    ->label('Available Before Hour')
+                    ->helperText('What hour before the reservation time the item is available for reservation')
+                    ->seconds(false)
+                    ->timezone('Asia/Riyadh'),
                 FileUpload::make('image')
                 ->disk('s3')
                 ->columns(1)
