@@ -36,6 +36,8 @@ class ReservationsSettings extends Page
     public ?string $add_calculated_vat = '';
     public ?string $vat_value = '';
     public ?string $enable_booking_notice = '';
+    public ?string $booking_intro_en = '';
+    public ?string $booking_intro_ar = '';
     public ?string $booking_notice_en = '';
     public ?string $booking_notice_ar = '';
     public ?string $occasion_items_title_en = '';
@@ -59,6 +61,8 @@ class ReservationsSettings extends Page
         $this->add_calculated_vat = Setting::where('key', 'add_calculated_vat')->first()?->value ?? false;
         $this->vat_value = Setting::where('key', 'vat_value')->first()?->value ?? false;
         $this->enable_booking_notice = Setting::where('key', 'enable_booking_notice')->first()?->value ?? true;
+        $this->booking_intro_en = Setting::where('key', 'booking_intro_en')->first()?->value ?? '';
+        $this->booking_intro_ar = Setting::where('key', 'booking_intro_ar')->first()?->value ?? '';
         $this->booking_notice_en = Setting::where('key', 'booking_notice_en')->first()?->value ?? '';
         $this->booking_notice_ar = Setting::where('key', 'booking_notice_ar')->first()?->value ?? '';
         $this->occasion_items_title_en = Setting::where('key', 'occasion_items_title_en')->first()?->value ?? '';
@@ -124,6 +128,14 @@ class ReservationsSettings extends Page
                 'xl' => 3,
             ])
             ->schema([
+                Fieldset::make('Booking Widget Introduction Text - what displayed to customers before the booking form')
+                ->schema([
+                    Textarea::make('booking_intro_en')->label('Booking widget intro in English'),
+                    Textarea::make('booking_intro_ar')->label('Booking widget intro in Arabic'),
+                ])->columns([
+                    'xs' => 1,
+                    'sm' => 2,
+                ]),
                 Fieldset::make('Booking Popup Notice - Drinks and desserts policy ')
                 ->schema([
                     Textarea::make('booking_notice_en')->label('Notice in English')->required(),
@@ -165,6 +177,8 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'enable_occasion_items_payment'], ['value' => $this->enable_occasion_items_payment]);
         Setting::updateOrCreate(['key' => 'add_calculated_vat'], ['value' => $this->add_calculated_vat]);
         Setting::updateOrCreate(['key' => 'vat_value'], ['value' => $this->vat_value]);
+        Setting::updateOrCreate(['key' => 'booking_intro_en'], ['value' => $this->booking_intro_en]);
+        Setting::updateOrCreate(['key' => 'booking_intro_ar'], ['value' => $this->booking_intro_ar]);
         Setting::updateOrCreate(['key' => 'booking_notice_en'], ['value' => $this->booking_notice_en]);
         Setting::updateOrCreate(['key' => 'booking_notice_ar'], ['value' => $this->booking_notice_ar]);
         Setting::updateOrCreate(['key' => 'occasion_items_title_en'], ['value' => $this->occasion_items_title_en]);

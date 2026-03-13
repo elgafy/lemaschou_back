@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('occasion_special_items', function (Blueprint $table) {
-            $table->string('available_before_time')->nullable();
+            $table->string('available_before_time')->nullable()->default('13')->after('reservation_availability_period');
         });
     }
 
