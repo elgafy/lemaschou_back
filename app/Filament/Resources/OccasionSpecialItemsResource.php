@@ -67,7 +67,8 @@ class OccasionSpecialItemsResource extends Resource
                     ->helperText('Number of days in advance the item is available for reservation')
                     ->required()
                     ->numeric()
-                    ->minValue('0'),
+                    ->minValue('0')
+                    ->default('0'),
                 TextInput::make('available_before_time')
                     ->label('Available Before Hour')
                     ->helperText('What hour in 24 hours format, before the booking time; the item is available for reservation, e.g. if the booking time is 20:00 and you set this field to 18:00, the item will not be available for reservation after 18:00')
