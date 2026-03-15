@@ -85,7 +85,7 @@ class OccasionSpecialItemsResource extends Resource
                 ->maxSize('125')
                 ->visibility('publico')
                 ->storeFileNamesIn('original_filename')
-                ->nullable()
+                ->required()
                 // ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord) // Required only on create
                 ->rules([
                     'mimes:jpeg,png,jpg,webp',
