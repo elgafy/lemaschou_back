@@ -65,6 +65,7 @@ class ReservationService
         ], 200);
     }
     public function makeReservation(Request $request) {
+        Setting::where('key', 'add_calculated_vat')->first()?->value == 'true' ? $add_vat = true : $add_vat = false;
         Log::alert("Making reservation with data: " . json_encode($request->all()));
         $validated = $request->validate([
             'date' => 'required|date',
@@ -139,11 +140,18 @@ class ReservationService
             // calculate order price and total
             $order_price = 0;
             $order_total = 0;
+            $calculated_vat = 0;
             foreach ($items as $item) {
                 $order_price += $item->price;
             }
             $this->output->writeln("Order total: " . $order_price);
-            Setting::where('key', 'add_calculated_vat')->first()?->value == 'true' ? $order_total = $order_price + ( ($order_price * Setting::where('key', 'vat_value')->first()?->value) / 100 ) : $order_total = $order_price;
+
+            if ($add_vat) {
+                $calculated_vat = $this->calculatedVat($order_price);
+                $order_total = $order_price + $calculated_vat;
+            } else {
+                $order_total = $order_price;
+            }
             $this->output->writeln("Order total with VAT: " . $order_total);
 
             // Create the order
@@ -152,17 +160,27 @@ class ReservationService
                 "user_email" => $user->email,
                 "status" => "pending",
                 "price" => $order_price ?? 0,
+                "vat" => $calculated_vat,
                 "total" => $order_total ?? 0,
                 "payment_processor" => "sevenrooms",
                 "payment_reference" => "",
             ]);
 
             foreach ($items as $item) {
+                $price = $item->price;
+                $item_vat = 0;
+                $item_total = $price;
+                if ($add_vat) {
+                    $item_vat = $this->calculatedVat($price);
+                    $item_total = $price + $item_vat;
+                }
                 $order->items()->create([
                     'itemable_id'   => $item->id,
                     'itemable_type' => OccasionSpecialItems::class,
                     'quantity'      => 1,
                     'price'         => $item->price,
+                    'vat'           => $item_vat,
+                    'total_price'   => $item_total,
                 ]);
             }
             $reservation->order_id = $order->id;
@@ -173,25 +191,43 @@ class ReservationService
         }
 
         if ($validated['deposite']) {
+            $deposite_price = $validated['deposite'];
+            $deposite_total = 0;
+            $calculated_vat = 0;
+            if ($add_vat) {
+                $calculated_vat = $this->calculatedVat($deposite_price);
+                $deposite_total = $deposite_price + $calculated_vat;
+            } else {
+                $deposite_total = $deposite_price;
+            }
             if (!isset($order)) {
                 $order = Order::create([
                     "user_id" => $user->id,
                     "user_email" => $user->email,
                     "status" => "pending",
+                    "price" => $deposite_price,
+                    "vat" => $calculated_vat,
+                    "total" => $deposite_total,
                     "payment_processor" => "sevenrooms",
                     "payment_reference" => "",
                 ]);
+                $this->output->writeln("Created order for deposite: " . $order->id);
+            } else {
+                $order->price = $deposite_price + $order->price;
+                $order->vat = $calculated_vat + $order->vat;
+                $order->total = $deposite_total + $order->total;
             }
+
+            // Add special day deposite to order items
             $special_day = SpecialDays::where('date', $reservation->date)->first();
             $order->items()->create([
                     'itemable_id'   => $special_day->id,
                     'itemable_type' => SpecialDays::class,
                     'quantity'      => 1,
-                    'price'         => $validated['deposite'],
-                    'total'         => $validated['deposite'],
+                    'price'         => $deposite_price,
+                    'vat'           => $calculated_vat,
+                    'total_price'   => $deposite_total,
                 ]);
-            $order->price = $validated['deposite'] + $order->price;
-            $order->total = $validated['deposite'] + $order->total;
             $order->save();
             $reservation->order_id = $order->id;
             $reservation->save();
@@ -203,5 +239,11 @@ class ReservationService
         Log::alert("Created reservation with data: " . json_encode($reservation));
         if ($reservation->order) Log::alert("Created reservation order with data: " . json_encode($reservation->order) . " and items: " . json_encode($reservation->order->items));
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];
+    }
+
+    // Claculate VAT based on the price and the VAT value from settings
+    private function calculatedVat($amount) {
+        $vat_value = Setting::where('key', 'vat_value')->first()?->value ?? 0;
+        return (($amount * $vat_value) / 100);
     }
 }

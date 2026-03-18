@@ -25,11 +25,6 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
-    // public function items() {
-    //     return $this->belongsToMany(OccasionSpecialItems::class, 'order_items', 'order_id', 'item_id')
-    //     ->withPivot('quantity', 'price')
-    //     ->withTimestamps();
-    // }
     public function items()
     {
         return $this->hasMany(OrderItems::class);

@@ -12,6 +12,8 @@ class OrderItems extends Model
         'itemable_id',
         'itemable_type',
         'price',
+        'vat',
+        'total_price',
         'quantity',
     ];
     public function order()

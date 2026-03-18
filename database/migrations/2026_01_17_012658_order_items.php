@@ -15,7 +15,9 @@ return new class extends Migration
         $table->id();
         $table->foreignId('order_id')->constrained('orders')->unique()->onDelete('cascade');
         $table->morphs('itemable'); // Polymorphic relation to various item types
-        $table->decimal('price', 10, 2); // Price at the time of purchase
+        $table->decimal('price', 10, 2);
+        $table->decimal('vat', 10, 2);
+        $table->decimal('total_price', 10, 2);
         $table->unsignedInteger('quantity')->default(1);
         $table->timestamps();
     });
