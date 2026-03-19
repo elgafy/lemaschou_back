@@ -23,6 +23,7 @@ Route::prefix('reservations')->group(function () {
     Route::get('check-availability/{date}/{guests?}/{starttime?}/{endtime?}/',[ReservationController::class, 'checkAvailability']);
     Route::get('occasion-items',[ReservationController::class, 'getOccasionItems']);
     Route::post('book',[ReservationController::class, 'book']);
+    Route::get('{id}', [ReservationController::class, 'getReservation']);
 });
 
 Route::prefix('pages')->group(function () {

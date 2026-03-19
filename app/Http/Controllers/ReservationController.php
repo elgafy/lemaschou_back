@@ -104,4 +104,18 @@ class ReservationController extends Controller
                 ],
         ], 201);
     }
+
+    public function getReservation (Request $request) {
+        $reservation = Reservation::where('sevenrooms_reservation_id', $request->id)->first();
+        if (!$reservation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reservation not found',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => $reservation,
+        ], 200);
+    }
 }
