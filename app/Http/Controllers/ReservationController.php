@@ -22,7 +22,10 @@ class ReservationController extends Controller
     public $token = '';
     public $sevenroomsService;
     public $reservationService;
-    public function __construct() {
+    public $output;
+
+        public function __construct() {
+        $this->output = new ConsoleOutput();
         $this->sevenroomsService = new SevenroomsService();
         $this->reservationService = new ReservationService();
         $this->token = Cache::remember('apiToken', 82800, function() {
@@ -107,15 +110,19 @@ class ReservationController extends Controller
 
     public function getReservation (Request $request) {
         $reservation = Reservation::where('sevenrooms_reservation_id', $request->id)->first();
-        if (!$reservation) {
+        $this->output->writeln("Reservation request by id: " . json_encode($reservation));
+        // fix returns when reservation not found
+        if ($reservation) {
             return response()->json([
-                'success' => false,
-                'message' => 'Reservation not found',
-            ], 404);
+                'success' => true,
+                'data' => $reservation,
+            ], 200);
         }
         return response()->json([
-            'success' => true,
-            'data' => $reservation,
-        ], 200);
+            'success' => false,
+            'data' => "Reservation not found",
+            'message' => 'Reservation not found',
+        ], 404);
+
     }
 }
