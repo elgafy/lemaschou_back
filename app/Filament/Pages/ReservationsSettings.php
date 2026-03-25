@@ -19,7 +19,7 @@ class ReservationsSettings extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Reservation Settings';
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 10;
     protected static ?string $navigationGroup = 'Reservations Management';
 
     protected static string $view = 'filament.pages.reservations-settings';
@@ -46,6 +46,9 @@ class ReservationsSettings extends Page
     public ?string $occasion_items_notice_ar = '';
     public ?array $occasions = [];
     public ?array $allergies = [];
+    public ?string $enable_personnel_booking_email_notification = '';
+    public ?string $enable_guest_booking_email_notification = '';
+    public ?array $reservation_notice_emails = [];
 
 
     public function mount(): void {
@@ -71,12 +74,22 @@ class ReservationsSettings extends Page
         $this->occasion_items_notice_ar = Setting::where('key', 'occasion_items_notice_ar')->first()?->value ?? '';
         $this->occasions = json_decode(Setting::where('key', 'occasions')->first()?->value, true) ?? [];
         $this->allergies = json_decode(Setting::where('key', 'allergies')->first()?->value, true) ?? [];
+        $this->enable_personnel_booking_email_notification = Setting::where('key', 'enable_personnel_booking_email_notification')->first()?->value ?? '';
+        $this->enable_guest_booking_email_notification = Setting::where('key', 'enable_guest_booking_email_notification')->first()?->value ?? '';
+        $this->reservation_notice_emails = json_decode(Setting::where('key', 'reservation_notice_emails')->first()?->value, true) ?? [];
     }
     protected function getFormSchema(): array {
         return [
-            Toggle::make('use_reservation_external_link')->label('Use external link for reservation')->live(),
+            Toggle::make('use_reservation_external_link')
+            ->label('Use external link for reservation')
+            ->helperText('Use an external link for reservation instead of the website booking system.')
+            ->live(),
             TextInput::make('reservation_link')->label('Reservation Link')->activeUrl()->required()->maxLength(255)->hidden(fn (Get $get): bool => ! $get('use_reservation_external_link')),
-            TextInput::make('sevenrooms_venue_id')->label('Sevenrooms venue ID')->required()->maxLength(255),
+            TextInput::make('sevenrooms_venue_id')
+            ->label('Sevenrooms venue ID')
+            ->helperText('Sevenrooms venue ID which will be used for reservations, this field is mandatory for reservations to be accessible in Sevenrooms.')
+            ->required()
+            ->maxLength(255),
             TextInput::make('booking_time_window')->label('Booking Time Window')->numeric()->integer()->minValue(1)->required()->helperText('Initial booking reservation will be holded for this period (in minutes) before being automatically released if not confirmed.'),
             Fieldset::make('Guests Count Limits')
                 ->schema([
@@ -162,6 +175,24 @@ class ReservationsSettings extends Page
                 ]),
             ])
             ->collapsed(),
+            Section::make('Email Notifications Settings')
+            ->schema([
+                Toggle::make('enable_guest_booking_email_notification')->label('Enable Booking Email Notification for Guests')
+                ->helperText('Send email notification to guests email after booking is confirmed or updated.'),
+                Toggle::make('enable_personnel_booking_email_notification')->label('Enable Booking Email Notification for Personnel')
+                ->helperText('Send email notification to specified emails when a new reservation is made.')
+                ->live(),
+                Repeater::make('reservation_notice_emails')
+                ->label('Personnel to receive reservation notice emails')
+                ->schema([
+                    TextInput::make('name')->required(),
+                    TextInput::make('email')->required(),
+                ])
+                ->columns(2)
+                ->collapsible()
+                ->hidden(fn (Get $get): bool => ! $get('enable_personnel_booking_email_notification'))
+            ])
+            ->collapsed(),
         ];
     }
     public function submit(): void {
@@ -187,6 +218,9 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'occasion_items_notice_ar'], ['value' => $this->occasion_items_notice_ar]);
         Setting::updateOrCreate(['key' => 'occasions'], ['value' => json_encode($this->occasions)]);
         Setting::updateOrCreate(['key' => 'allergies'], ['value' => json_encode($this->allergies)]);
+        Setting::updateOrCreate(['key' => 'enable_personnel_booking_email_notification'], ['value' => $this->enable_personnel_booking_email_notification]);
+        Setting::updateOrCreate(['key' => 'enable_guest_booking_email_notification'], ['value' => $this->enable_guest_booking_email_notification]);
+        Setting::updateOrCreate(['key' => 'reservation_notice_emails'], ['value' => json_encode($this->reservation_notice_emails)]);
 
         Notification::make()
             ->title('Saved successfully')
