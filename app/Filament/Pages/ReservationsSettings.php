@@ -178,9 +178,9 @@ class ReservationsSettings extends Page
             Section::make('Email Notifications Settings')
             ->schema([
                 Toggle::make('enable_guest_booking_email_notification')->label('Enable Booking Email Notification for Guests')
-                ->helperText('Send email notification to guests email after booking is confirmed or updated.'),
-                Toggle::make('enable_personnel_booking_email_notification')->label('Enable Booking Email Notification for Personnel')
-                ->helperText('Send email notification to specified emails when a new reservation is made.')
+                ->helperText('Send email notification to guests email after booking is made or updated.'),
+                Toggle::make('enable_personnel_booking_email_notification')->label('Enable Reservation\'s Special Items Email Notification for Personnel')
+                ->helperText('Send email notification to specified emails when a new reservation is made with special occasion items.')
                 ->live(),
                 Repeater::make('reservation_notice_emails')
                 ->label('Personnel to receive reservation notice emails')
