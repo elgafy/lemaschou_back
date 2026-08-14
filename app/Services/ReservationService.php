@@ -28,6 +28,8 @@ class ReservationService
         $keys = [
             'use_reservation_external_link',
             'reservation_link',
+            'force_reservation_downpayment',
+            'downpayment_amount',
             'seating_time_en',
             'seating_time_ar',
             'booking_min_guests',

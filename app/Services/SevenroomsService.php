@@ -83,7 +83,7 @@ class SevenroomsService
     }
 
     // Get Resturant Venues
-    public function checkAvailability($date, $guests, $starttime, $endtime) {
+    public function checkAvailability($date, $guests = 2, $starttime = '', $endtime = '') {
         if (!$this->token) {
             $this->refreshToken();
         }
@@ -123,16 +123,15 @@ class SevenroomsService
                     }
                 }
                 return response()->json([
-                    'success' => true, // based on the success() function name in your code
+                    'success' => true,
                     'data' => $times,
                     'special_day' => $special_day,
                 ], 200);
             }
             if ($response["status"] != 200) {
                 return response()->json([
-                    'success' => true, // based on the success() function name in your code
-                    'data' => $response['data'],
-                    'message' => $response['message'],
+                    'success' => false,
+                    'message' => 'Something went wrong while checking availability. Please try again later.',
                 ], $response["status"]);
             }
         } catch (\Throwable $th) {
@@ -146,7 +145,13 @@ class SevenroomsService
     }
 
     public function sevenroomsBook($reservation, $user) {
-        // Implement booking logic here
+        $enable_seven_rooms_booking = Setting::where('key', 'enable_seven_rooms_booking')->first()?->value ?? 0;
+        if ($enable_seven_rooms_booking === 0) {
+            return response()->json([
+                'success' => true,
+                'data' => ['Test mode is on for sevenrooms reservations'],
+            ], 200);
+        }
         $this->output->writeln("Sevenrooms Booking Request for Reservation: " . $reservation);
         Log::alert("Sevenrooms Booking Request for Reservation: " . json_encode($reservation));
         $tags = "";

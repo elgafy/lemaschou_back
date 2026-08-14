@@ -26,6 +26,9 @@ class ReservationsSettings extends Page
 
     public ?string $use_reservation_external_link = '';
     public ?string $reservation_link = '';
+    public ?string $force_reservation_downpayment = '';
+    public ?string $downpayment_amount = '';
+    public ?string $enable_sevenrooms_reservation = '';
     public ?string $booking_time_window = '';
     public ?int $booking_min_guests = 2;
     public ?int $booking_max_guests = 12;
@@ -54,6 +57,9 @@ class ReservationsSettings extends Page
     public function mount(): void {
         $this->use_reservation_external_link = Setting::where('key', 'use_reservation_external_link')->first()?->value ?? '';
         $this->reservation_link = Setting::where('key', 'reservation_link')->first()?->value ?? '';
+        $this->enable_sevenrooms_reservation = Setting::where('key', 'enable_sevenrooms_reservation')->first()?->value ?? '';
+        $this->force_reservation_downpayment = Setting::where('key', 'force_reservation_downpayment')->first()?->value ?? '';
+        $this->downpayment_amount = Setting::where('key', 'downpayment_amount')->first()?->value ?? '';
         $this->booking_time_window = Setting::where('key', 'booking_time_window')->first()?->value ?? '';
         $this->booking_min_guests = Setting::where('key', 'booking_min_guests')->first()?->value ?? 2;
         $this->booking_max_guests = Setting::where('key', 'booking_max_guests')->first()?->value ?? 12;
@@ -85,6 +91,11 @@ class ReservationsSettings extends Page
             ->helperText('Use an external link for reservation instead of the website booking system.')
             ->live(),
             TextInput::make('reservation_link')->label('Reservation Link')->activeUrl()->required()->maxLength(255)->hidden(fn (Get $get): bool => ! $get('use_reservation_external_link')),
+            Toggle::make('enable_sevenrooms_reservation')->label('Enable sevenrooms booking (disable for testing)'),
+            Toggle::make('force_reservation_downpayment')->label('Force Reservation Downpayment')
+            ->helperText('Force customers to make a downpayment when making a reservation.')
+            ->live(),
+            TextInput::make('downpayment_amount')->label('Downpayment Amount')->helperText('Amount of the downpayment required.')->numeric()->integer()->minValue(0)->required()->hidden(fn (Get $get): bool => ! $get('force_reservation_downpayment')),
             TextInput::make('sevenrooms_venue_id')
             ->label('Sevenrooms venue ID')
             ->helperText('Sevenrooms venue ID which will be used for reservations, this field is mandatory for reservations to be accessible in Sevenrooms.')
@@ -198,6 +209,9 @@ class ReservationsSettings extends Page
     public function submit(): void {
         Setting::updateOrCreate(['key' => 'use_reservation_external_link'], ['value' => $this->use_reservation_external_link]);
         Setting::updateOrCreate(['key' => 'reservation_link'], ['value' => $this->reservation_link]);
+        Setting::updateOrCreate(['key' => 'force_reservation_downpayment'], ['value' => $this->force_reservation_downpayment]);
+        Setting::updateOrCreate(['key' => 'enable_sevenrooms_reservation'], ['value' => $this->enable_sevenrooms_reservation]);
+        Setting::updateOrCreate(['key' => 'downpayment_amount'], ['value' => $this->downpayment_amount]);
         Setting::updateOrCreate(['key' => 'booking_time_window'], ['value' => $this->booking_time_window]);
         Setting::updateOrCreate(['key' => 'booking_min_guests'], ['value' => $this->booking_min_guests]);
         Setting::updateOrCreate(['key' => 'booking_max_guests'], ['value' => $this->booking_max_guests]);
