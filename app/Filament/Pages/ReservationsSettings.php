@@ -92,10 +92,6 @@ class ReservationsSettings extends Page
             ->live(),
             TextInput::make('reservation_link')->label('Reservation Link')->activeUrl()->required()->maxLength(255)->hidden(fn (Get $get): bool => ! $get('use_reservation_external_link')),
             Toggle::make('enable_sevenrooms_reservation')->label('Enable sevenrooms booking (disable for testing)'),
-            Toggle::make('force_reservation_downpayment')->label('Force Reservation Downpayment')
-            ->helperText('Force customers to make a downpayment when making a reservation.')
-            ->live(),
-            TextInput::make('downpayment_amount')->label('Downpayment Amount')->helperText('Amount of the downpayment required.')->numeric()->integer()->minValue(0)->required()->hidden(fn (Get $get): bool => ! $get('force_reservation_downpayment')),
             TextInput::make('sevenrooms_venue_id')
             ->label('Sevenrooms venue ID')
             ->helperText('Sevenrooms venue ID which will be used for reservations, this field is mandatory for reservations to be accessible in Sevenrooms.')
