@@ -12,19 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('user_email');
-            $table->string('payment_status')->default('pending');
-            $table->decimal('price', 10, 2);
-            $table->decimal('vat', 10, 2)->default(0);
-            $table->decimal('total', 10, 2);
-            $table->decimal('deposite', 10, 2)->nullable();
+$table->id();
+
+            $table->foreignId('reservation_id')
+                ->constrained('reservations')
+                ->cascadeOnDelete();
+            $table->decimal('subtotal', 10, 2)->default(0);
+            $table->decimal('discount', 10, 2)->default(0);
+            $table->decimal('deposit', 10, 2)->default(0);
+            $table->decimal('total', 10, 2)->default(0);
             $table->string('payment_processor')->nullable();
-            $table->string('payment_reference')->nullable();
+            $table->string('currency', 3)->default('SAR');
+            $table->string('status')->default('pending');
             $table->timestamps();
-            // Indexes for faster lookups
-            $table->index(['user_id', 'user_email']);
+
+            $table->index('status');
+
         });
     }
 

@@ -13,13 +13,17 @@ return new class extends Migration
     {
         Schema::create('order_items', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('order_id')->constrained('orders')->unique()->onDelete('cascade');
+        $table->foreignId('order_id')
+                ->constrained('orders')
+                ->cascadeOnDelete();
         $table->morphs('itemable'); // Polymorphic relation to various item types
-        $table->decimal('price', 10, 2);
-        $table->decimal('vat', 10, 2);
-        $table->decimal('total_price', 10, 2);
-        $table->unsignedInteger('quantity')->default(1);
-        $table->timestamps();
+        // Snapshot of the item at the time of purchase
+            $table->string('name');
+            $table->unsignedInteger('quantity')->default(1);
+            $table->decimal('unit_price', 10, 2);
+            $table->decimal('total', 10, 2);
+
+            $table->timestamps();
     });
     }
 
