@@ -21,7 +21,7 @@ $table->id();
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('deposit', 10, 2)->default(0);
             $table->decimal('total', 10, 2)->default(0);
-            $table->string('payment_processor')->nullable();
+            $table->string('payment_processor')->default('edfapay');
             $table->string('currency', 3)->default('SAR');
             $table->string('status')->default('pending');
             $table->timestamps();

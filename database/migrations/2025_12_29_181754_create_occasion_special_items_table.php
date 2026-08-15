@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('description_en');
             $table->string('description_ar');
             $table->unsignedInteger('price');
+            $table->boolean('has_variations');
             $table->unsignedInteger('reservation_availability_period')->default(0);
             $table->string('available_before_time')->nullable()->default('13')->after('reservation_availability_period');
-            // $table->time('available_before_time')->nullable();
             $table->foreignId('category')->constrained('occasion_special_items_categories', 'id');
             $table->string('image');
             $table->json('options');
