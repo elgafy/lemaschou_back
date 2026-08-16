@@ -16,7 +16,12 @@ class OccasionSpecialItems extends Model
         'available_before_time',
         'category',
         'image',
-        // 'enable_card'
+        'variations',
+        'options'
+    ];
+    protected $casts = [
+        'variations' => 'array',
+        'options' => 'array',
     ];
 
     public function category() {

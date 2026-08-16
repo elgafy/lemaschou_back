@@ -7,10 +7,12 @@ use App\Filament\Resources\OccasionSpecialItemsResource\RelationManagers;
 use App\Models\OccasionSpecialItems;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -98,6 +100,58 @@ class OccasionSpecialItemsResource extends Resource
                 // ->imageResizeTargetWidth('100')
                 // ->imageResizeTargetHeight('100')
                 ,
+                Toggle::make('has_variations')
+                    ->label('Has Variations')
+                    ->default(false),
+                Repeater::make('variations')
+                    ->label('Item Variations')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Variation Name')
+                            ->required()
+                            ->maxLength(100),
+
+                        Select::make('type')
+                            ->label('Type')
+                            ->options([
+                                'select' => 'Select',
+                                'text' => 'Text',
+                            ])
+                            ->default('select')
+                            ->required()
+                            ->live(),
+
+                        Toggle::make('required')
+                            ->label('Required')
+                            ->default(false),
+
+                        Repeater::make('values')
+                            ->label('Variation Values')
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Value')
+                                    ->required()
+                                    ->maxLength(100),
+
+                                TextInput::make('price')
+                                    ->label('Variation Price')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->minValue(0)
+                                    ->prefix('SAR'),
+                            ])
+                            ->visible(fn ($get) => $get('type') === 'select')
+                            ->columns(2)
+                            ->addActionLabel('Add Value')
+                            ->reorderable()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
+                    ])
+                    ->addActionLabel('Add Variation')
+                    ->reorderable()
+                    ->collapsible()
+                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -118,7 +172,8 @@ class OccasionSpecialItemsResource extends Resource
                     ->label('Name in arabic')
                     ->searchable(),
                 TextColumn::make('price')
-                    ->label('Price')
+                    ->label('Price'),
+
             ])
             ->filters([
                 //

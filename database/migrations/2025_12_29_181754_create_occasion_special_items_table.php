@@ -20,9 +20,10 @@ return new class extends Migration
             $table->unsignedInteger('price');
             $table->boolean('has_variations');
             $table->unsignedInteger('reservation_availability_period')->default(0);
-            $table->string('available_before_time')->nullable()->default('13');
+            $table->string('available_before_time')->default('13');
             $table->foreignId('category')->constrained('occasion_special_items_categories', 'id');
             $table->string('image');
+            $table->json('variations');
             $table->json('options');
             $table->timestamps();
         });
