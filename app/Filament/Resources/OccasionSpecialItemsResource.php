@@ -84,7 +84,7 @@ class OccasionSpecialItemsResource extends Resource
                 ->reorderable()
                 ->downloadable()
                 ->openable()
-                ->maxSize('125')
+                // ->maxSize('125')
                 ->visibility('publico')
                 ->storeFileNamesIn('original_filename')
                 ->required()

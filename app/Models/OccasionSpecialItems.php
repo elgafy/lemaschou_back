@@ -16,6 +16,7 @@ class OccasionSpecialItems extends Model
         'available_before_time',
         'category',
         'image',
+        'has_variations',
         'variations',
         'options'
     ];

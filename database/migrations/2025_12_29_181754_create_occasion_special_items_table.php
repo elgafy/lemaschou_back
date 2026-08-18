@@ -18,13 +18,13 @@ return new class extends Migration
             $table->string('description_en');
             $table->string('description_ar');
             $table->unsignedInteger('price');
-            $table->boolean('has_variations');
+            $table->boolean('has_variations')->nullable()->default(false);
             $table->unsignedInteger('reservation_availability_period')->default(0);
             $table->string('available_before_time')->default('13');
             $table->foreignId('category')->constrained('occasion_special_items_categories', 'id');
             $table->string('image');
-            $table->json('variations');
-            $table->json('options');
+            $table->json('variations')->nullable();
+            $table->json('options')->nullable();
             $table->timestamps();
         });
     }
