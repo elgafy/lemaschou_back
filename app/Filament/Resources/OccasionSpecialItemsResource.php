@@ -102,14 +102,23 @@ class OccasionSpecialItemsResource extends Resource
                 ,
                 Toggle::make('has_variations')
                     ->label('Has Variations')
-                    ->default(false),
+                    ->default(false)
+                    ->live(),
                 Repeater::make('variations')
                     ->label('Item Variations')
+                    ->columns(2)
                     ->schema([
-                        TextInput::make('name')
-                            ->label('Variation Name')
+                        TextInput::make('name_en')
+                            ->label('Variation Name in English')
                             ->required()
-                            ->maxLength(100),
+                            ->maxLength(100)
+                            ->columnSpan(1),
+
+                        TextInput::make('name_ar')
+                            ->label('Variation Name in Arabic')
+                            ->required()
+                            ->maxLength(100)
+                            ->columnSpan(1),
 
                         Select::make('type')
                             ->label('Type')
@@ -121,17 +130,20 @@ class OccasionSpecialItemsResource extends Resource
                             ->required()
                             ->live(),
 
-                        Toggle::make('required')
-                            ->label('Required')
-                            ->default(false),
-
                         Repeater::make('values')
                             ->label('Variation Values')
                             ->schema([
-                                TextInput::make('name')
-                                    ->label('Value')
+                                TextInput::make('value_en')
+                                    ->label('Value in english')
                                     ->required()
-                                    ->maxLength(100),
+                                    ->maxLength(100)
+                                    ->columnSpan(1),
+
+                                TextInput::make('value_ar')
+                                    ->label('Value in arabic')
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->columnSpan(1),
 
                                 TextInput::make('price')
                                     ->label('Variation Price')
@@ -141,17 +153,19 @@ class OccasionSpecialItemsResource extends Resource
                                     ->prefix('SAR'),
                             ])
                             ->visible(fn ($get) => $get('type') === 'select')
-                            ->columns(2)
+                            ->columns(3)
+                            ->columnSpanFull()
                             ->addActionLabel('Add Value')
                             ->reorderable()
                             ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
+                            ->itemLabel(fn (array $state): ?string => $state['value_en'] ?? null),
                     ])
                     ->addActionLabel('Add Variation')
                     ->reorderable()
                     ->collapsible()
-                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                    ->columnSpanFull(),
+                    ->itemLabel(fn (array $state): ?string => $state['name_en'] ?? null)
+                    ->columnSpanFull()
+                    ->visible(fn ($get) => $get('has_variations') === true),
             ]);
     }
 
