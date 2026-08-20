@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\GiftCard;
 use App\Models\OccasionSpecialItems;
 use App\Models\OccasionSpecialItemsCategory;
 use App\Models\Order;
@@ -9,9 +10,9 @@ use App\Models\Reservation;
 use App\Models\Setting;
 use App\Models\SpecialDays;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Output\ConsoleOutput;
@@ -19,12 +20,16 @@ use Laravel\Prompts\Output\ConsoleOutput;
 class ReservationService
 {
     public $token = '';
+
     public $output;
 
-    public function __construct() {
-        $this->output = new ConsoleOutput();
+    public function __construct()
+    {
+        $this->output = new ConsoleOutput;
     }
-    public function getSettings () {
+
+    public function getSettings()
+    {
         $keys = [
             'use_reservation_external_link',
             'reservation_link',
@@ -52,23 +57,28 @@ class ReservationService
             'booking_intro_en',
             'booking_intro_ar',
         ];
-        $reservation_settings = Setting::whereIn('key', $keys)->get()->pluck('value', 'key')->toArray();
+        $reservation_settings = $this->getCachedReservationSettings($keys);
         $occasions = json_decode(Setting::where('key', 'occasions')->first()?->value ?? '', true) ?? [];
         $allergies = json_decode(Setting::where('key', 'allergies')->first()?->value ?? '', true);
-        $items = OccasionSpecialItemsCategory::with('items')->get();
+        $items = $this->getCachedOccasionItems();
+        $gift_cards = $this->getCachedGiftCards();
+
         return response()->json([
             'success' => true, // based on the success() function name in your code
             'data' => [
-                "foodAllergies" => $allergies,
-                "occasions" => $occasions,
-                "occasionItems" => $items,
-                "settings" => $reservation_settings
+                'foodAllergies' => $allergies,
+                'occasions' => $occasions,
+                'occasionItems' => $items,
+                'settings' => $reservation_settings,
+                'giftCards' => $gift_cards,
             ],
         ], 200);
     }
-    public function makeReservation(Request $request) {
+
+    public function makeReservation(Request $request)
+    {
         Setting::where('key', 'add_calculated_vat')->first()?->value == 'true' ? $add_vat = true : $add_vat = false;
-        Log::alert("Making reservation with data: " . json_encode($request->all()));
+        Log::alert('Making reservation with data: '.json_encode($request->all()));
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string|max:10',
@@ -89,10 +99,10 @@ class ReservationService
             'termsAccepted' => 'required|string|max:5',
             'paymentPolicyAccepted' => 'required|string|max:5',
         ]);
-        $this->output->writeln("Validated occasion: " . $validated['occasion']);
-        $this->output->writeln("Validated occasionSelectedItems: " . json_encode($validated['occasionSelectedItems']));
-        $this->output->writeln("Validated allergies: " . $validated['allergies']);
-        $this->output->writeln("Validated deposite: " . $validated['deposite']);
+        $this->output->writeln('Validated occasion: '.$validated['occasion']);
+        $this->output->writeln('Validated occasionSelectedItems: '.json_encode($validated['occasionSelectedItems']));
+        $this->output->writeln('Validated allergies: '.$validated['allergies']);
+        $this->output->writeln('Validated deposite: '.$validated['deposite']);
         // Create the reservation local database
         $reservation = Reservation::create([
             'date' => $validated['date'],
@@ -105,7 +115,7 @@ class ReservationService
             'special_request' => $validated['specialRequest'] ?? null,
             'occasion' => $validated['occasion'] ?? false,
             'occasion_type' => $validated['occasion'] == true ? $validated['occasionType'] : null,
-            'occasion_items' => $validated['occasion'] == true ? (  isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '' ? explode(',', $validated['occasionSelectedItems']) : null ) : null,
+            'occasion_items' => $validated['occasion'] == true ? (isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '' ? explode(',', $validated['occasionSelectedItems']) : null) : null,
             'allergic' => $validated['allergic'] ?? false,
             'food_allergies' => $validated['allergic'] == true ? (isset($validated['allergies']) ? explode(',', $validated['allergies']) : null) : null,
             'terms_accepted' => $validated['termsAccepted'] === 'true' ? true : false,
@@ -119,25 +129,25 @@ class ReservationService
         // Create or get the user
         $user = User::firstOrCreate(
             ['email' => $request['emailAddress']],
-            ['name' => $request['firstName'] . ' ' . $request['lastName']],
+            ['name' => $request['firstName'].' '.$request['lastName']],
             ['password' => bcrypt(Str::random(16))],
         );
         $user->assignRole('guest');
         Auth::login($user);
-        $this->output->writeln("user id: " . $user->id);
+        $this->output->writeln('user id: '.$user->id);
         $token = $user->createToken('api-token-reservation-booking')->plainTextToken;
-        $this->output->writeln("Authenticated user token: " . $token);
+        $this->output->writeln('Authenticated user token: '.$token);
         // if special day, add special day deposite to order
 
         // Create an order if there are occasion items selected
-        if (($validated['occasion']  == true && isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '') ) {
+        if (($validated['occasion'] == true && isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '')) {
             $items_ids = explode(',', $validated['occasionSelectedItems']);
             $items = [];
             foreach ($items_ids as $item_id) {
                 $item = OccasionSpecialItems::findOrFail($item_id);
                 $items[] = $item;
             }
-            $this->output->writeln("Occasion items: " . json_encode($items));
+            $this->output->writeln('Occasion items: '.json_encode($items));
 
             // calculate order price and total
             $order_price = 0;
@@ -146,7 +156,7 @@ class ReservationService
             foreach ($items as $item) {
                 $order_price += $item->price;
             }
-            $this->output->writeln("Order total: " . $order_price);
+            $this->output->writeln('Order total: '.$order_price);
 
             if ($add_vat) {
                 $calculated_vat = $this->calculatedVat($order_price);
@@ -154,18 +164,18 @@ class ReservationService
             } else {
                 $order_total = $order_price;
             }
-            $this->output->writeln("Order total with VAT: " . $order_total);
+            $this->output->writeln('Order total with VAT: '.$order_total);
 
             // Create the order
             $order = Order::create([
-                "user_id" => $user->id,
-                "user_email" => $user->email,
-                "status" => "pending",
-                "price" => $order_price ?? 0,
-                "vat" => $calculated_vat,
-                "total" => $order_total ?? 0,
-                "payment_processor" => "sevenrooms",
-                "payment_reference" => "",
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'status' => 'pending',
+                'price' => $order_price ?? 0,
+                'vat' => $calculated_vat,
+                'total' => $order_total ?? 0,
+                'payment_processor' => 'sevenrooms',
+                'payment_reference' => '',
             ]);
 
             foreach ($items as $item) {
@@ -177,19 +187,19 @@ class ReservationService
                     $item_total = $price + $item_vat;
                 }
                 $order->items()->create([
-                    'itemable_id'   => $item->id,
+                    'itemable_id' => $item->id,
                     'itemable_type' => OccasionSpecialItems::class,
-                    'quantity'      => 1,
-                    'price'         => $item->price,
-                    'vat'           => $item_vat,
-                    'total_price'   => $item_total,
+                    'quantity' => 1,
+                    'price' => $item->price,
+                    'vat' => $item_vat,
+                    'total_price' => $item_total,
                 ]);
             }
             $reservation->order_id = $order->id;
             $reservation->save();
             $order->save();
-            $this->output->writeln("Order reservation: " . $order->reservation);
-            $this->output->writeln("Order items: " . $order->items);
+            $this->output->writeln('Order reservation: '.$order->reservation);
+            $this->output->writeln('Order items: '.$order->items);
         }
 
         if ($validated['deposite']) {
@@ -202,18 +212,18 @@ class ReservationService
             } else {
                 $deposite_total = $deposite_price;
             }
-            if (!isset($order)) {
+            if (! isset($order)) {
                 $order = Order::create([
-                    "user_id" => $user->id,
-                    "user_email" => $user->email,
-                    "status" => "pending",
-                    "price" => $deposite_price,
-                    "vat" => $calculated_vat,
-                    "total" => $deposite_total,
-                    "payment_processor" => "sevenrooms",
-                    "payment_reference" => "",
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'status' => 'pending',
+                    'price' => $deposite_price,
+                    'vat' => $calculated_vat,
+                    'total' => $deposite_total,
+                    'payment_processor' => 'sevenrooms',
+                    'payment_reference' => '',
                 ]);
-                $this->output->writeln("Created order for deposite: " . $order->id);
+                $this->output->writeln('Created order for deposite: '.$order->id);
             } else {
                 $order->price = $deposite_price + $order->price;
                 $order->vat = $calculated_vat + $order->vat;
@@ -223,29 +233,63 @@ class ReservationService
             // Add special day deposite to order items
             $special_day = SpecialDays::where('date', $reservation->date)->first();
             $order->items()->create([
-                    'itemable_id'   => $special_day->id,
-                    'itemable_type' => SpecialDays::class,
-                    'quantity'      => 1,
-                    'price'         => $deposite_price,
-                    'vat'           => $calculated_vat,
-                    'total_price'   => $deposite_total,
-                ]);
+                'itemable_id' => $special_day->id,
+                'itemable_type' => SpecialDays::class,
+                'quantity' => 1,
+                'price' => $deposite_price,
+                'vat' => $calculated_vat,
+                'total_price' => $deposite_total,
+            ]);
             $order->save();
             $reservation->order_id = $order->id;
             $reservation->save();
         }
 
-        $this->output->writeln("Created reservation id: " . $reservation->id);
-        $this->output->writeln("Created reservation order: " . $reservation->order);
-        if ($reservation->order) $this->output->writeln("Created reservation items: " . $reservation->order->items);
-        Log::alert("Created reservation with data: " . json_encode($reservation));
-        if ($reservation->order) Log::alert("Created reservation order with data: " . json_encode($reservation->order) . " and items: " . json_encode($reservation->order->items));
+        $this->output->writeln('Created reservation id: '.$reservation->id);
+        $this->output->writeln('Created reservation order: '.$reservation->order);
+        if ($reservation->order) {
+            $this->output->writeln('Created reservation items: '.$reservation->order->items);
+        }
+        Log::alert('Created reservation with data: '.json_encode($reservation));
+        if ($reservation->order) {
+            Log::alert('Created reservation order with data: '.json_encode($reservation->order).' and items: '.json_encode($reservation->order->items));
+        }
+
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];
     }
 
     // Claculate VAT based on the price and the VAT value from settings
-    private function calculatedVat($amount) {
+    private function calculatedVat($amount)
+    {
         $vat_value = Setting::where('key', 'vat_value')->first()?->value ?? 0;
-        return (($amount * $vat_value) / 100);
+
+        return ($amount * $vat_value) / 100;
+    }
+
+    // Cache reservation settings for a long time, invalidated when settings change
+    private function getCachedReservationSettings($keys)
+    {
+        return Cache::remember('reservation_settings', 604800, function () use ($keys) {
+            $this->output->writeln('Reservation settings cache miss');
+            return Setting::whereIn('key', $keys)->get()->pluck('value', 'key')->toArray();
+        });
+    }
+
+    // Cache occasion items for a long time, invalidated when items or categories change
+    public function getCachedOccasionItems()
+    {
+        return Cache::remember('occasion_items', 604800, function () {
+            $this->output->writeln('Occassion items cache miss');
+            return OccasionSpecialItemsCategory::with('items')->get();
+        });
+    }
+
+    // Cache gift cards for a long time, invalidated when gift cards change
+    private function getCachedGiftCards()
+    {
+        return Cache::remember('gift_cards', 604800, function () {
+            $this->output->writeln('Gift cards cache miss');
+            return GiftCard::all();
+        });
     }
 }
