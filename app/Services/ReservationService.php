@@ -79,6 +79,7 @@ class ReservationService
     {
         Setting::where('key', 'add_calculated_vat')->first()?->value == 'true' ? $add_vat = true : $add_vat = false;
         Log::alert('Making reservation with data: '.json_encode($request->all()));
+        $this->output->writeln('Making reservation with data: '.json_encode($request->all()));
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string|max:10',
