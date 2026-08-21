@@ -15,11 +15,11 @@ It is also a good starting point for a new laravel project.
 ## Prerequisites
 The following are the minimum requirements to run this project:
 - PHP 8.2+
-- Laravel 11.x
+- Laravel 13.x
 - Composer 2
 
 ## Installed Packages
-- Laravel Framework 11.x
+- Laravel Framework 13.x
 - l5-swagger 8.x
 
 ## Development Packages
