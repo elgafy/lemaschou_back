@@ -80,6 +80,7 @@ class ReservationService
         Setting::where('key', 'add_calculated_vat')->first()?->value == 'true' ? $add_vat = true : $add_vat = false;
         Log::alert('Making reservation with data: '.json_encode($request->all()));
         $this->output->writeln('Making reservation with data: '.json_encode($request->all()));
+        $this->output->writeln('Request: '.json_encode($request->all('occasionSelectedItems')));
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string|max:10',
@@ -89,21 +90,31 @@ class ReservationService
             'mobile' => 'nullable|string|max:20',
             'specialRequest' => 'nullable|string|max:255',
             'guests' => 'required|integer|min:1',
-            'occasion' => 'nullable|string|max:5',
+            'occasion' => 'nullable|boolean',
             'occasionType' => 'nullable|string|max:255',
-            'occasionSelectedItems' => 'nullable|string|max:255',
+            'occasionSelectedItems' => 'nullable|array|max:255',
+            'occasionSelectedItems.*.itemId' => 'required|integer',
+            'occasionSelectedItems.*.itemName' => 'required|string',
+            'occasionSelectedItems.*.variationValue' => 'nullable|string',
             'occasionItemsPrice' => 'nullable|numeric',
             'deposite' => 'nullable|numeric',
             'cardContent' => 'nullable|string|max:255',
-            'allergic' => 'nullable|string|max:5',
-            'allergies' => 'nullable|string|max:255',
-            'termsAccepted' => 'required|string|max:5',
-            'paymentPolicyAccepted' => 'required|string|max:5',
+            'allergic' => 'nullable|boolean',
+            'allergies' => 'nullable|array',
+            'allergies.*' => 'string|max:255',
+            'termsAccepted' => 'required|boolean',
+            'paymentPolicyAccepted' => 'required|boolean',
         ]);
-        $this->output->writeln('Validated occasion: '.$validated['occasion']);
-        $this->output->writeln('Validated occasionSelectedItems: '.json_encode($validated['occasionSelectedItems']));
-        $this->output->writeln('Validated allergies: '.$validated['allergies']);
-        $this->output->writeln('Validated deposite: '.$validated['deposite']);
+
+        $occasionSelectedItems = $validated['occasionSelectedItems'] ?? [];
+        $occasionItemIds = array_column($occasionSelectedItems, 'itemId');
+        $occasion = (bool) ($validated['occasion'] ?? false);
+        $allergic = (bool) ($validated['allergic'] ?? false);
+
+        $this->output->writeln('Validated occasion: '.json_encode($occasion));
+        $this->output->writeln('Validated occasionSelectedItems: '.json_encode($occasionSelectedItems));
+        $this->output->writeln('Validated allergies: '.json_encode($validated['allergies'] ?? []));
+        $this->output->writeln('Validated deposite: '.json_encode($validated['deposite'] ?? null));
         // Create the reservation local database
         $reservation = Reservation::create([
             'date' => $validated['date'],
@@ -114,15 +125,15 @@ class ReservationService
             'email' => $validated['emailAddress'],
             'mobile' => $validated['mobile'] ?? '',
             'special_request' => $validated['specialRequest'] ?? null,
-            'occasion' => $validated['occasion'] ?? false,
-            'occasion_type' => $validated['occasion'] == true ? $validated['occasionType'] : null,
-            'occasion_items' => $validated['occasion'] == true ? (isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '' ? explode(',', $validated['occasionSelectedItems']) : null) : null,
-            'allergic' => $validated['allergic'] ?? false,
-            'food_allergies' => $validated['allergic'] == true ? (isset($validated['allergies']) ? explode(',', $validated['allergies']) : null) : null,
-            'terms_accepted' => $validated['termsAccepted'] === 'true' ? true : false,
-            'payment_terms_accepted' => $validated['paymentPolicyAccepted'] === 'true' ? true : false,
-            'deposite' => $validated['deposite'],
-            'options' => $validated['cardContent'] ? [
+            'occasion' => $occasion,
+            'occasion_type' => $occasion ? ($validated['occasionType'] ?? null) : null,
+            'occasion_items' => $occasion && $occasionSelectedItems ? $occasionSelectedItems : null,
+            'allergic' => $allergic,
+            'food_allergies' => $allergic ? ($validated['allergies'] ?? null) : null,
+            'terms_accepted' => (bool) $validated['termsAccepted'],
+            'payment_terms_accepted' => (bool) $validated['paymentPolicyAccepted'],
+            'deposite' => $validated['deposite'] ?? null,
+            'options' => ! empty($validated['cardContent']) ? [
                 'card_content' => $validated['cardContent'],
             ] : null,
         ]);
@@ -141,10 +152,9 @@ class ReservationService
         // if special day, add special day deposite to order
 
         // Create an order if there are occasion items selected
-        if (($validated['occasion'] == true && isset($validated['occasionSelectedItems']) && $validated['occasionSelectedItems'] != '')) {
-            $items_ids = explode(',', $validated['occasionSelectedItems']);
+        if ($occasion && $occasionItemIds) {
             $items = [];
-            foreach ($items_ids as $item_id) {
+            foreach ($occasionItemIds as $item_id) {
                 $item = OccasionSpecialItems::findOrFail($item_id);
                 $items[] = $item;
             }
@@ -203,7 +213,7 @@ class ReservationService
             $this->output->writeln('Order items: '.$order->items);
         }
 
-        if ($validated['deposite']) {
+        if (! empty($validated['deposite'])) {
             $deposite_price = $validated['deposite'];
             $deposite_total = 0;
             $calculated_vat = 0;
@@ -272,6 +282,7 @@ class ReservationService
     {
         return Cache::remember('reservation_settings', 604800, function () use ($keys) {
             $this->output->writeln('Reservation settings cache miss');
+
             return Setting::whereIn('key', $keys)->get()->pluck('value', 'key')->toArray();
         });
     }
@@ -281,6 +292,7 @@ class ReservationService
     {
         return Cache::remember('occasion_items', 604800, function () {
             $this->output->writeln('Occassion items cache miss');
+
             return OccasionSpecialItemsCategory::with('items')->get();
         });
     }
@@ -290,6 +302,7 @@ class ReservationService
     {
         return Cache::remember('gift_cards', 604800, function () {
             $this->output->writeln('Gift cards cache miss');
+
             return GiftCard::all();
         });
     }

@@ -85,7 +85,7 @@ class ReservationController extends Controller
     public function book(Request $request)
     {
         $output = new ConsoleOutput;
-        $output->writeln($request->all());
+        // $output->writeln($request->all());
 
         // Validate the request data
         $result = $this->reservationService->makeReservation($request);
