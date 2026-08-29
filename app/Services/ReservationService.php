@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\ReservationOrderNotice;
 use App\Models\GiftCard;
 use App\Models\OccasionSpecialItems;
 use App\Models\OccasionSpecialItemsCategory;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Output\ConsoleOutput;
 
@@ -107,7 +109,6 @@ class ReservationService
         ]);
 
         $occasionSelectedItems = $validated['occasionSelectedItems'] ?? [];
-        $occasionItemIds = array_column($occasionSelectedItems, 'itemId');
         $occasion = (bool) ($validated['occasion'] ?? false);
         $allergic = (bool) ($validated['allergic'] ?? false);
 
@@ -149,111 +150,142 @@ class ReservationService
         $this->output->writeln('user id: '.$user->id);
         $token = $user->createToken('api-token-reservation-booking')->plainTextToken;
         $this->output->writeln('Authenticated user token: '.$token);
-        // if special day, add special day deposite to order
+
+        $order = null;
 
         // Create an order if there are occasion items selected
-        if ($occasion && $occasionItemIds) {
+        if ($occasion && $occasionSelectedItems) {
             $items = [];
-            foreach ($occasionItemIds as $item_id) {
-                $item = OccasionSpecialItems::findOrFail($item_id);
-                $items[] = $item;
+            foreach ($occasionSelectedItems as $selected) {
+                $item = OccasionSpecialItems::findOrFail($selected['itemId']);
+                $variationValue = $selected['variationValue'] ?? null;
+                $itemPrice = $item->price;
+                $itemName = $item->name_en;
+
+                // If item has variations and a variation was selected, use variation price and name
+                if ($item->has_variations && $variationValue && is_array($item->variations)) {
+                    foreach ($item->variations as $variation) {
+                        if (! isset($variation['values']) || ! is_array($variation['values'])) {
+                            continue;
+                        }
+                        foreach ($variation['values'] as $value) {
+                            if (($value['value_en'] ?? '') === $variationValue) {
+                                $itemPrice = (float) ($value['price'] ?? $item->price);
+                                $itemName = $item->name_en.' - '.$variationValue;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+
+                $items[] = [
+                    'model' => $item,
+                    'price' => $itemPrice,
+                    'name' => $itemName,
+                ];
             }
             $this->output->writeln('Occasion items: '.json_encode($items));
 
-            // calculate order price and total
-            $order_price = 0;
-            $order_total = 0;
-            $calculated_vat = 0;
-            foreach ($items as $item) {
-                $order_price += $item->price;
+            // calculate order subtotal
+            $order_subtotal = 0;
+            foreach ($items as $entry) {
+                $order_subtotal += $entry['price'];
             }
-            $this->output->writeln('Order total: '.$order_price);
+            $this->output->writeln('Order subtotal: '.$order_subtotal);
 
+            $order_total = $order_subtotal;
             if ($add_vat) {
-                $calculated_vat = $this->calculatedVat($order_price);
-                $order_total = $order_price + $calculated_vat;
-            } else {
-                $order_total = $order_price;
+                $vat_amount = $this->calculatedVat($order_subtotal);
+                $order_total = $order_subtotal + $vat_amount;
             }
-            $this->output->writeln('Order total with VAT: '.$order_total);
+            $this->output->writeln('Order total: '.$order_total);
 
             // Create the order
             $order = Order::create([
-                'user_id' => $user->id,
-                'user_email' => $user->email,
+                'reservation_id' => $reservation->id,
+                'subtotal' => $order_subtotal,
+                'discount' => 0,
+                'deposit' => 0,
+                'total' => $order_total,
+                'payment_processor' => 'edfapay',
+                'currency' => 'SAR',
                 'status' => 'pending',
-                'price' => $order_price ?? 0,
-                'vat' => $calculated_vat,
-                'total' => $order_total ?? 0,
-                'payment_processor' => 'sevenrooms',
-                'payment_reference' => '',
             ]);
 
-            foreach ($items as $item) {
-                $price = $item->price;
-                $item_vat = 0;
-                $item_total = $price;
+            foreach ($items as $entry) {
+                $item = $entry['model'];
+                $itemPrice = $entry['price'];
+                $itemName = $entry['name'];
+                $itemQuantity = $entry['quantity'] ?? 1;
+                $itemPrice = $itemPrice;
+                $itemSubTotal = $itemPrice * $itemQuantity;
+                $vat = 0;
                 if ($add_vat) {
-                    $item_vat = $this->calculatedVat($price);
-                    $item_total = $price + $item_vat;
+                    $vat = $this->calculatedVat($itemSubTotal);
                 }
+                $itemTotal = $itemSubTotal + $vat;
                 $order->items()->create([
                     'itemable_id' => $item->id,
                     'itemable_type' => OccasionSpecialItems::class,
-                    'quantity' => 1,
-                    'price' => $item->price,
-                    'vat' => $item_vat,
-                    'total_price' => $item_total,
+                    'name' => $itemName,
+                    'quantity' => $itemQuantity,
+                    'unit_price' => $itemPrice,
+                    'sub_total' => $itemSubTotal,
+                    'vat' => $vat,
+                    'total' => $itemTotal,
                 ]);
             }
             $reservation->order_id = $order->id;
             $reservation->save();
-            $order->save();
-            $this->output->writeln('Order reservation: '.$order->reservation);
+            $this->output->writeln('Created order id: '.$order->id);
             $this->output->writeln('Order items: '.$order->items);
         }
 
         if (! empty($validated['deposite'])) {
-            $deposite_price = $validated['deposite'];
-            $deposite_total = 0;
-            $calculated_vat = 0;
+            $deposite_price = (float) $validated['deposite'];
+            $deposite_vat = 0;
+            $deposite_total = $deposite_price;
             if ($add_vat) {
-                $calculated_vat = $this->calculatedVat($deposite_price);
-                $deposite_total = $deposite_price + $calculated_vat;
-            } else {
-                $deposite_total = $deposite_price;
-            }
-            if (! isset($order)) {
-                $order = Order::create([
-                    'user_id' => $user->id,
-                    'user_email' => $user->email,
-                    'status' => 'pending',
-                    'price' => $deposite_price,
-                    'vat' => $calculated_vat,
-                    'total' => $deposite_total,
-                    'payment_processor' => 'sevenrooms',
-                    'payment_reference' => '',
-                ]);
-                $this->output->writeln('Created order for deposite: '.$order->id);
-            } else {
-                $order->price = $deposite_price + $order->price;
-                $order->vat = $calculated_vat + $order->vat;
-                $order->total = $deposite_total + $order->total;
+                $deposite_vat = $this->calculatedVat($deposite_price);
+                $deposite_total = $deposite_price + $deposite_vat;
             }
 
-            // Add special day deposite to order items
             $special_day = SpecialDays::where('date', $reservation->date)->first();
-            $order->items()->create([
-                'itemable_id' => $special_day->id,
-                'itemable_type' => SpecialDays::class,
-                'quantity' => 1,
-                'price' => $deposite_price,
-                'vat' => $calculated_vat,
-                'total_price' => $deposite_total,
-            ]);
-            $order->save();
-            $reservation->order_id = $order->id;
-            $reservation->save();
+
+            if (! $special_day) {
+                Log::warning('No special day found for date: '.$reservation->date.'. Skipping deposit.');
+            } else {
+                if (! $order) {
+                    $order = Order::create([
+                        'reservation_id' => $reservation->id,
+                        'subtotal' => 0,
+                        'discount' => 0,
+                        'deposit' => $deposite_price,
+                        'total' => $deposite_total,
+                        'payment_processor' => 'edfapay',
+                        'currency' => 'SAR',
+                        'status' => 'pending',
+                    ]);
+                    $this->output->writeln('Created order for deposit: '.$order->id);
+                } else {
+                    $order->deposit = $deposite_price + $order->deposit;
+                    $order->total = $deposite_total + $order->total;
+                }
+
+                $order->items()->create([
+                    'itemable_id' => $special_day->id,
+                    'itemable_type' => SpecialDays::class,
+                    'name' => $special_day->name_en ?? 'Special Day Deposit',
+                    'quantity' => 1,
+                    'unit_price' => $deposite_price,
+                    'sub_total' => $deposite_price,
+                    'vat' => $deposite_vat,
+                    'total' => $deposite_total,
+                ]);
+                $order->save();
+                $reservation->order_id = $order->id;
+                $reservation->save();
+            }
         }
 
         $this->output->writeln('Created reservation id: '.$reservation->id);
@@ -264,6 +296,7 @@ class ReservationService
         Log::alert('Created reservation with data: '.json_encode($reservation));
         if ($reservation->order) {
             Log::alert('Created reservation order with data: '.json_encode($reservation->order).' and items: '.json_encode($reservation->order->items));
+            $this->sendReservationOrderNotice($reservation, $reservation->order);
         }
 
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];
@@ -305,5 +338,27 @@ class ReservationService
 
             return GiftCard::all();
         });
+    }
+
+    // Send reservation order notice email to staff
+    private function sendReservationOrderNotice(Reservation $reservation, Order $order): void
+    {
+        $raw = Setting::where('key', 'reservation_notice_emails')->first()?->value;
+        if (! $raw) {
+            return;
+        }
+
+        $recipients = json_decode($raw, true);
+        if (! is_array($recipients) || empty($recipients)) {
+            return;
+        }
+
+        foreach ($recipients as $entry) {
+            $email = $entry['email'] ?? null;
+            if ($email) {
+                Mail::to($email)->queue(new ReservationOrderNotice($reservation, $order));
+                $this->output->writeln('Queued reservation order notice to: '.$email);
+            }
+        }
     }
 }

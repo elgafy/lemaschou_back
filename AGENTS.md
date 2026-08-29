@@ -93,3 +93,4 @@ Sevenrooms API token cached separately as `apiToken` (23h TTL) in `SevenroomsSer
 - Model naming inconsistencies: `OccasionSpecialItems` (verbose), `OrderItems` (should be singular `OrderItem`), `payment.php` (lowercase filename)
 - Sevenrooms env vars required: `SEVENROOMS_BASE_URL`, `SEVENROOMS_CLIENT_ID`, `SEVENROOMS_CLIENT_SECRET`, `SEVENROOMS_VENUE_ID`
 - `config/response.php` must be updated when adding new API response keys (en + ar)
+- **Always use `Mail::to()->queue()` for sending emails — never `Mail::to()->send()`.** All emails must be queued, not sent synchronously.

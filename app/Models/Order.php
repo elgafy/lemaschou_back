@@ -7,26 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $fillable = [
-        "user_id",
-        "user_email",
-        "payment_status",
-        "price",
-        "vat",
-        "total",
-        "payment_processor",
-        "payment_reference",
+        'reservation_id',
+        'subtotal',
+        'discount',
+        'deposit',
+        'total',
+        'payment_processor',
+        'currency',
+        'status',
     ];
 
     public function reservation()
     {
-        return $this->hasOne(Reservation::class);
+        return $this->belongsTo(Reservation::class);
     }
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+
     public function items()
     {
         return $this->hasMany(OrderItems::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }
