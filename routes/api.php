@@ -20,10 +20,17 @@ Route::prefix('settings')->group(function () {
 Route::prefix('reservations')->group(function () {
     Route::get('settings', [ReservationController::class, 'getReservationSettings']);
     Route::get('venues', [ReservationController::class, 'getVenues']);
-    Route::get('check-availability/{date}/{guests?}/{starttime?}/{endtime?}/',[ReservationController::class, 'checkAvailability']);
-    Route::get('occasion-items',[ReservationController::class, 'getOccasionItems']);
-    Route::post('book',[ReservationController::class, 'book']);
+    Route::get('check-availability/{date}/{guests?}/{starttime?}/{endtime?}/', [ReservationController::class, 'checkAvailability']);
+    Route::get('occasion-items', [ReservationController::class, 'getOccasionItems']);
+    Route::post('book', [ReservationController::class, 'book']);
     Route::get('{id}', [ReservationController::class, 'getReservation']);
+});
+
+Route::prefix('payments')->group(function () {
+    Route::post('initiate', [PaymentController::class, 'initiate']);
+    Route::post('webhook', [PaymentController::class, 'webhook']);
+    Route::get('success', [PaymentController::class, 'success']);
+    Route::get('failure', [PaymentController::class, 'failure']);
 });
 
 Route::prefix('pages')->group(function () {

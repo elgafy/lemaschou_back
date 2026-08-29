@@ -53,6 +53,14 @@ php artisan db:seed               # seed database
 - `OrderItems` — polymorphic (`itemable` morph) linking to `OccasionSpecialItems` or `SpecialDays`
 - `ReservationService` → `makeReservation()` → `SevenroomsService::sevenroomsBook()` is the core booking flow
 
+**Payment gateway (Edfapay):**
+- Abstracted via `PaymentGatewayInterface` → `EdfapayGateway` (strategy pattern)
+- `PaymentService` orchestrates: initiate, webhook handling, status verification
+- To add a new gateway: implement `PaymentGatewayInterface`, add to `config/payment.php` gateways map, set `PAYMENT_GATEWAY` env var
+- Flow: `POST /api/payments/initiate` → returns `redirect_url` → customer pays → Edfapay sends webhook → `POST /api/payments/webhook` → updates `Order` and `Payment` records
+- Config: `config/payment.php` (gateway selection + redirect URLs), `config('payment.gateways.edfapay')` for Edfapay-specific settings
+- `Payment` record tracks `gateway_session_id`, `gateway_transaction_id`, `gateway_response`, `paid_at`
+
 **API response pattern:**
 ```php
 // Custom macro defined in AppServiceProvider, not response()->json()

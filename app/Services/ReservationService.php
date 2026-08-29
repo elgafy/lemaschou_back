@@ -98,6 +98,7 @@ class ReservationService
             'occasionSelectedItems.*.itemId' => 'required|integer',
             'occasionSelectedItems.*.itemName' => 'required|string',
             'occasionSelectedItems.*.variationValue' => 'nullable|string',
+            'occasionSelectedItems.*.quantity' => 'nullable|integer|min:1',
             'occasionItemsPrice' => 'nullable|numeric',
             'deposite' => 'nullable|numeric',
             'cardContent' => 'nullable|string|max:255',
@@ -182,6 +183,7 @@ class ReservationService
                     'model' => $item,
                     'price' => $itemPrice,
                     'name' => $itemName,
+                    'quantity' => (int) ($selected['quantity'] ?? 1),
                 ];
             }
             $this->output->writeln('Occasion items: '.json_encode($items));
@@ -189,7 +191,7 @@ class ReservationService
             // calculate order subtotal
             $order_subtotal = 0;
             foreach ($items as $entry) {
-                $order_subtotal += $entry['price'];
+                $order_subtotal += $entry['price'] * $entry['quantity'];
             }
             $this->output->writeln('Order subtotal: '.$order_subtotal);
 
@@ -216,8 +218,7 @@ class ReservationService
                 $item = $entry['model'];
                 $itemPrice = $entry['price'];
                 $itemName = $entry['name'];
-                $itemQuantity = $entry['quantity'] ?? 1;
-                $itemPrice = $itemPrice;
+                $itemQuantity = $entry['quantity'];
                 $itemSubTotal = $itemPrice * $itemQuantity;
                 $vat = 0;
                 if ($add_vat) {

@@ -2,12 +2,11 @@
 
 namespace App\Providers;
 
-use App\Models\OccasionSpecialItems;
-use App\Models\SpecialDays;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\ServiceProvider;
+use App\Services\Payments\Contracts\PaymentGatewayInterface;
+use App\Services\Payments\Gateways\EdfapayGateway;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,7 +15,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(PaymentGatewayInterface::class, function () {
+            return match (config('payment.gateway')) {
+                'edfapay' => new EdfapayGateway,
+                default => throw new \RuntimeException('Unsupported payment gateway: '.config('payment.gateway')),
+            };
+        });
     }
 
     /**
@@ -24,20 +28,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-            // Define the response macro for res() logic
-            Response::macro('res', function ($status, $key, $data = null,$code=null) {
-                // Assuming getLang() is a global helper function
-                $lang = getLang();
+        // Define the response macro for res() logic
+        Response::macro('res', function ($status, $key, $data = null, $code = null) {
+            // Assuming getLang() is a global helper function
+            $lang = getLang();
 
-                $response = [
-                    'status' => $status,
-                    'message' => Config::get('response.' . $key . '.' . $lang),
-                    'data' => $data ?? [],
-                ];
+            $response = [
+                'status' => $status,
+                'message' => Config::get('response.'.$key.'.'.$lang),
+                'data' => $data ?? [],
+            ];
 
-                // Return the response as a JSON object
-                return response()->json($response,$code);
-            });
+            // Return the response as a JSON object
+            return response()->json($response, $code);
+        });
 
     }
 }
