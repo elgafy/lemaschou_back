@@ -3,37 +3,34 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrdersResource\Pages;
-use App\Filament\Resources\OrdersResource\RelationManagers;
 use App\Models\Order;
-use Dom\Text;
-use Filament\Forms;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OrdersResource extends Resource
 {
     protected static ?string $model = Order::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+
     protected static ?string $navigationGroup = 'Reservations Management';
+
     protected static ?int $navigationSort = 2;
+
     protected static ?string $label = 'Reservation Order';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Select::make('payment_status')->label('Payment Status')->required()
+                Select::make('status')->label('Status')->required()
                     ->options([
                         'pending' => 'Pending',
-                        'completed' => 'Completed',
+                        'paid' => 'Paid',
                         'failed' => 'Failed',
                         'refunded' => 'Refunded',
                     ]),
@@ -44,15 +41,42 @@ class OrdersResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('reservation.id')->label('Reservation ID')->sortable()->searchable(),
-                TextColumn::make('user_email')->label('User Email')->sortable()->searchable(),
-                TextColumn::make('payment_status')->label('Payment Status')->sortable()->searchable(),
-                TextColumn::make('price')->label('Price')->money('usd', true)->sortable()->searchable(),
-                TextColumn::make('vat')->label('VAT')->money('usd', true)->sortable()->searchable(),
-                TextColumn::make('total')->label('Total')->money('usd', true)->sortable()->searchable(),
-                TextColumn::make('payment_processor')->label('Payment Processor')->sortable()->searchable(),
-                TextColumn::make('payment_reference')->label('Payment Reference')->sortable()->searchable(),
-                TextColumn::make('created_at')->label('Created At')->dateTime()->sortable()->searchable(),
+                TextColumn::make('id')->label('Order ID')->sortable(),
+                TextColumn::make('reservation.id')
+                    ->label('Reservation ID')
+                    ->sortable()
+                    ->searchable()
+                    ->url(fn ($record) => ReservationResource::getUrl('view', ['record' => $record->reservation_id]))
+                    ->openUrlInNewTab(),
+                TextColumn::make('reservation.first_name')
+                    ->label('Guest')
+                    ->formatStateUsing(fn ($record) => $record->reservation
+                        ? $record->reservation->first_name.' '.$record->reservation->last_name
+                        : '—')
+                    ->sortable()
+                    ->searchable(['reservations.first_name', 'reservations.last_name']),
+                TextColumn::make('reservation.email')
+                    ->label('Email')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('subtotal')->label('Subtotal')->money('SAR', true)->sortable(),
+                TextColumn::make('discount')->label('Discount')->money('SAR', true)->sortable(),
+                TextColumn::make('deposit')->label('Deposit')->money('SAR', true)->sortable(),
+                TextColumn::make('total')->label('Total')->money('SAR', true)->sortable(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state) => match ($state) {
+                        'pending' => 'warning',
+                        'paid' => 'success',
+                        'failed' => 'danger',
+                        'refunded' => 'info',
+                        default => 'gray',
+                    })
+                    ->sortable(),
+                TextColumn::make('payment_processor')->label('Gateway')->sortable(),
+                TextColumn::make('currency')->label('Currency')->sortable(),
+                TextColumn::make('created_at')->label('Created At')->dateTime()->sortable(),
             ])
             ->filters([
                 //
