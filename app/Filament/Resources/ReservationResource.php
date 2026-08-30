@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReservationResource\Pages;
+use App\Filament\Resources\ReservationResource\Widgets\ReservationsOverview;
 use App\Models\Reservation;
 use App\Models\Setting;
 use Filament\Forms\Components\CheckboxList;
@@ -157,6 +158,13 @@ class ReservationResource extends Resource
             // 'create' => Pages\CreateReservation::route('/create'),
             'edit' => Pages\EditReservation::route('/{record}/edit'),
             'view' => Pages\ViewReservation::route('/{record}'),
+        ];
+    }
+
+    public static function getWidgets(): array
+{
+        return [
+            ReservationsOverview::class,
         ];
     }
 }

@@ -5,11 +5,13 @@ use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Meal;
 use App\Models\User;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 
 class StatsWidget extends BaseWidget
 {
+    use HasWidgetShield;
     protected function getCards(): array
     {
         return [
