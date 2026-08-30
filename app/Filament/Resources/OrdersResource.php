@@ -23,35 +23,6 @@ class OrdersResource extends Resource
 
     protected static ?string $label = 'Reservation Order';
 
-    public static function canViewAny(): bool
-    {
-        $user = Filament::auth()->user();
-        return $user ? $user->can('view_any_reservation') : false;
-    }
-    public static function canView($record): bool
-    {
-        $user = Filament::auth()->user();
-        return $user ? $user->can('view_reservation') : false;
-    }
-
-    public static function canCreate(): bool
-    {
-        $user = Filament::auth()->user();
-        return $user ? $user->can('create_reservation') : false;
-    }
-
-    public static function canEdit($record): bool
-    {
-        $user = Filament::auth()->user();
-        return $user ? $user->can('update_reservation') : false;
-    }
-
-    public static function canDelete($record): bool
-    {
-        $user = Filament::auth()->user();
-        return $user ? $user->can('delete_reservation') : false;
-    }
-
     public static function form(Form $form): Form
     {
         return $form
