@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Facades\Filament;
 use App\Filament\Resources\OrdersResource\Pages;
 use App\Models\Order;
 use Filament\Forms\Components\Select;
@@ -27,30 +26,30 @@ class OrdersResource extends Resource
     public static function canViewAny(): bool
     {
         $user = Filament::auth()->user();
-        return $user ? $user->can('view_any_order') : false;
+        return $user ? $user->can('view_any_reservation') : false;
     }
     public static function canView($record): bool
     {
         $user = Filament::auth()->user();
-        return $user ? $user->can('view_order') : false;
+        return $user ? $user->can('view_reservation') : false;
     }
 
     public static function canCreate(): bool
     {
         $user = Filament::auth()->user();
-        return $user ? $user->can('create_order') : false;
+        return $user ? $user->can('create_reservation') : false;
     }
 
     public static function canEdit($record): bool
     {
         $user = Filament::auth()->user();
-        return $user ? $user->can('update_order') : false;
+        return $user ? $user->can('update_reservation') : false;
     }
 
     public static function canDelete($record): bool
     {
         $user = Filament::auth()->user();
-        return $user ? $user->can('delete_order') : false;
+        return $user ? $user->can('delete_reservation') : false;
     }
 
     public static function form(Form $form): Form
