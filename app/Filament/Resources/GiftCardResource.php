@@ -89,6 +89,7 @@ class GiftCardResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->successNotification(
@@ -118,6 +119,7 @@ class GiftCardResource extends Resource
             'index' => Pages\ListGiftCards::route('/'),
             'create' => Pages\CreateGiftCard::route('/create'),
             'edit' => Pages\EditGiftCard::route('/{record}/edit'),
+            'view' => Pages\ViewGiftCard::route('/{record}'),
         ];
     }
 }
