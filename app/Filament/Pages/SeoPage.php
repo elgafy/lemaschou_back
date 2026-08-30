@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Seo;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TagsInput;
@@ -14,6 +15,7 @@ use Filament\Forms\Components\TextInput;
 
 class SeoPage extends Page
 {
+    use HasPageShield;
     protected static ?string $navigationLabel = 'Seo';
     protected static string $view = 'filament.pages.seo';
     protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
@@ -170,12 +172,6 @@ class SeoPage extends Page
             ->title('Seo settings updated successfully!')
             ->success()
             ->send();
-    }
-
-    public static function canPage(): bool
-    {
-        $user = Filament::auth()->user();
-        return $user ? $user->can('page_SeoPage') : false;
     }
 
 }

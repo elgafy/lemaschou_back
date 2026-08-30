@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use Filament\Forms;
 use Filament\Pages\Page;
 use App\Models\Setting;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
@@ -17,6 +18,7 @@ use Livewire\WithFileUploads;
 class SettingsPage extends Page
 {
     use WithFileUploads;
+    use HasPageShield;
 
     protected static ?string $navigationLabel = 'Settings';
     protected static string $view = 'filament.pages.settings';
@@ -108,9 +110,4 @@ class SettingsPage extends Page
             ->send();
     }
 
-    public static function canPage(): bool
-    {
-        $user = Filament::auth()->user();
-        return $user ? $user->can('page_SettingsPage') : false;
-    }
 }

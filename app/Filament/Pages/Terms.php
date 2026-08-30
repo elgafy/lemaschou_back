@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Seo;
 use App\Models\Setting;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Dom\Text;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\RichEditor;
@@ -14,6 +15,7 @@ use Filament\Pages\Page;
 
 class Terms extends Page
 {
+    use HasPageShield;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.terms';
