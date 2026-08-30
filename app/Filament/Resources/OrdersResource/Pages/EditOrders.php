@@ -14,7 +14,7 @@ class EditOrders extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('cancel')
+            Actions\Action::make('cancelOrder')
                 ->label('Cancel Order')
                 ->color('danger')
                 ->icon('heroicon-o-x-circle')

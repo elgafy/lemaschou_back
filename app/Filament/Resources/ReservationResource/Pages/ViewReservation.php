@@ -10,6 +10,7 @@ use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewReservation extends ViewRecord
@@ -27,7 +28,25 @@ class ViewReservation extends ViewRecord
     {
         return [
             Actions\EditAction::make(),
-            Actions\DeleteAction::make(),
+            Actions\Action::make('cancel')
+                ->label('Cancel Reservation')
+                ->color('danger')
+                ->icon('heroicon-o-x-circle')
+                ->requiresConfirmation()
+                ->modalHeading('Cancel Reservation')
+                ->modalDescription('Are you sure you want to cancel this reservation? This action cannot be undone.')
+                ->modalSubmitActionLabel('Yes, cancel reservation')
+                ->visible(fn ($record) => $record->status !== 'cancelled')
+                ->action(function ($record) {
+                    $record->update(['status' => 'cancelled']);
+
+                    Notification::make()
+                        ->title('Reservation #'.$record->id.' has been cancelled')
+                        ->success()
+                        ->send();
+
+                    $this->refreshFormData(['status']);
+                }),
         ];
     }
 
