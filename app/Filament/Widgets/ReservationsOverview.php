@@ -4,11 +4,13 @@ namespace App\Filament\Widgets;
 
 use App\Models\Order;
 use App\Models\Reservation;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class ReservationsOverview extends BaseWidget
 {
+    use HasWidgetShield;
     protected function getStats(): array
     {
         return [
