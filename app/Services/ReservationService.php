@@ -102,6 +102,7 @@ class ReservationService
             'occasionItemsPrice' => 'nullable|numeric',
             'deposite' => 'nullable|numeric',
             'cardContent' => 'nullable|string|max:255',
+            'giftCard' => 'nullable|integer|exists:gift_cards,id',
             'allergic' => 'nullable|boolean',
             'allergies' => 'nullable|array',
             'allergies.*' => 'string|max:255',
@@ -287,6 +288,40 @@ class ReservationService
                 $reservation->order_id = $order->id;
                 $reservation->save();
             }
+        }
+
+        // Add gift card as order item if selected
+        if (! empty($validated['giftCard'])) {
+            $giftCard = GiftCard::findOrFail($validated['giftCard']);
+            $cardContent = $validated['cardContent'] ?? '';
+            $itemName = $giftCard->title_en.' - Content: '.$cardContent;
+
+            if (! $order) {
+                $order = Order::create([
+                    'reservation_id' => $reservation->id,
+                    'subtotal' => 0,
+                    'discount' => 0,
+                    'deposit' => 0,
+                    'total' => 0,
+                    'payment_processor' => 'edfapay',
+                    'currency' => 'SAR',
+                    'status' => 'pending',
+                ]);
+                $reservation->order_id = $order->id;
+                $reservation->save();
+            }
+
+            $order->items()->create([
+                'itemable_id' => $giftCard->id,
+                'itemable_type' => GiftCard::class,
+                'name' => $itemName,
+                'quantity' => 1,
+                'unit_price' => 0,
+                'sub_total' => 0,
+                'vat' => 0,
+                'total' => 0,
+            ]);
+            $this->output->writeln('Added gift card to order: '.$itemName);
         }
 
         $this->output->writeln('Created reservation id: '.$reservation->id);

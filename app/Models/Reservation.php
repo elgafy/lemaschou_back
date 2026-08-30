@@ -8,24 +8,24 @@ class Reservation extends Model
 {
     //
     protected $fillable = [
-            'status',
-            'date',
-            'time',
-            'guests_count',
-            'first_name',
-            'last_name',
-            'email',
-            'mobile',
-            'special_request',
-            'occasion',
-            'occasion_type',
-            'occasion_items',
-            'allergic',
-            'food_allergies',
-            'terms_accepted',
-            'deposite',
-            'payment_terms_accepted',
-            'options'
+        'status',
+        'date',
+        'time',
+        'guests_count',
+        'first_name',
+        'last_name',
+        'email',
+        'mobile',
+        'special_request',
+        'occasion',
+        'occasion_type',
+        'occasion_items',
+        'allergic',
+        'food_allergies',
+        'terms_accepted',
+        'deposite',
+        'payment_terms_accepted',
+        'options',
     ];
 
     protected $casts = [
@@ -34,7 +34,8 @@ class Reservation extends Model
         'options' => 'array',
     ];
 
-    public function Order() {
+    public function order()
+    {
         return $this->belongsTo(Order::class);
     }
 }

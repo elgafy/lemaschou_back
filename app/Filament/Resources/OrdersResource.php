@@ -33,6 +33,7 @@ class OrdersResource extends Resource
                         'paid' => 'Paid',
                         'failed' => 'Failed',
                         'refunded' => 'Refunded',
+                        'cancelled' => 'Cancelled',
                     ]),
             ]);
     }
@@ -71,6 +72,7 @@ class OrdersResource extends Resource
                         'paid' => 'success',
                         'failed' => 'danger',
                         'refunded' => 'info',
+                        'cancelled' => 'danger',
                         default => 'gray',
                     })
                     ->sortable(),
