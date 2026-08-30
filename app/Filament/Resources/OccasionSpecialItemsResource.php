@@ -124,7 +124,6 @@ class OccasionSpecialItemsResource extends Resource
                             ->label('Type')
                             ->options([
                                 'select' => 'Select',
-                                'text' => 'Text',
                             ])
                             ->default('select')
                             ->required()

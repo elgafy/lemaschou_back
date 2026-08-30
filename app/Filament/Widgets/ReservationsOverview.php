@@ -15,8 +15,9 @@ class ReservationsOverview extends BaseWidget
     {
         return [
             Stat::make('Total Reservations', Reservation::count())
-            ->url(route('filament.admin.resources.reservations.index')), // Make it a direct link
-            Stat::make('Total Orders', Order::count()),
+            ->url(route('filament.admin.resources.reservations.index')),
+            Stat::make('Total Orders', Order::count())
+            ->url(route('filament.admin.resources.orders.index')),
         ];
     }
 }

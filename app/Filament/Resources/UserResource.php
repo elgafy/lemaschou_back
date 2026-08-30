@@ -4,16 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables\Table;
-use Filament\Tables;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -22,34 +22,42 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     protected static ?int $navigationSort = 1;
+
     public static function canViewAny(): bool
     {
         $user = Filament::auth()->user();
+
         return $user ? $user->can('view_any_user') : false;
     }
+
     public static function canView($record): bool
     {
         $user = Filament::auth()->user();
+
         return $user ? $user->can('view_user') : false;
     }
 
     public static function canCreate(): bool
     {
         $user = Filament::auth()->user();
+
         return $user ? $user->can('create_user') : false;
     }
 
     public static function canEdit($record): bool
     {
         $user = Filament::auth()->user();
+
         return $user ? $user->can('update_user') : false;
     }
 
     public static function canDelete($record): bool
     {
         $user = Filament::auth()->user();
+
         return $user ? $user->can('delete_user') : false;
     }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -68,8 +76,11 @@ class UserResource extends Resource
                 TextInput::make('password')
                     ->label('Password')
                     ->password()
-                    ->required()
-                    ->minLength(8),
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->minLength(8)
+                    ->dehydrateStateUsing(fn (?string $state) => filled($state) ? bcrypt($state) : null)
+                    ->dehydrated(fn (?string $state): bool => filled($state))
+                    ->helperText(fn (string $operation): string => $operation === 'edit' ? 'Leave empty to keep current password' : ''),
 
                 Select::make('roles')
                     ->label('Choose Role')
@@ -90,7 +101,7 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->date()
-                    ->sortable()
+                    ->sortable(),
             ])->defaultSort('id', 'desc')
             ->filters([
                 //
@@ -111,8 +122,6 @@ class UserResource extends Resource
                 ]),
             ]);
     }
-
-
 
     public static function getRelations(): array
     {
