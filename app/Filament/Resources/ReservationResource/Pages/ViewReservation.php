@@ -165,11 +165,12 @@ class ViewReservation extends ViewRecord
                         TextEntry::make('order.status')
                             ->label('Order Status')
                             ->badge()
-                            ->color(fn (?string $state) => match ($state) {
+                            ->color(fn (string $state) => match ($state) {
                                 'pending' => 'warning',
                                 'paid' => 'success',
                                 'failed' => 'danger',
                                 'refunded' => 'info',
+                                'cancelled' => 'danger',
                                 default => 'gray',
                             })
                             ->placeholder('—'),
