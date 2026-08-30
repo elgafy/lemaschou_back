@@ -49,6 +49,18 @@ class OrdersResource extends Resource
                     ->searchable()
                     ->url(fn ($record) => ReservationResource::getUrl('view', ['record' => $record->reservation_id]))
                     ->openUrlInNewTab(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state) => match ($state) {
+                        'pending' => 'warning',
+                        'paid' => 'success',
+                        'failed' => 'danger',
+                        'refunded' => 'info',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable(),
                 TextColumn::make('reservation.first_name')
                     ->label('Guest')
                     ->formatStateUsing(fn ($record) => $record->reservation
@@ -64,18 +76,6 @@ class OrdersResource extends Resource
                 TextColumn::make('discount')->label('Discount')->money('SAR', true)->sortable(),
                 TextColumn::make('deposit')->label('Deposit')->money('SAR', true)->sortable(),
                 TextColumn::make('total')->label('Total')->money('SAR', true)->sortable(),
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state) => match ($state) {
-                        'pending' => 'warning',
-                        'paid' => 'success',
-                        'failed' => 'danger',
-                        'refunded' => 'info',
-                        'cancelled' => 'danger',
-                        default => 'gray',
-                    })
-                    ->sortable(),
                 TextColumn::make('payment_processor')->label('Gateway')->sortable(),
                 TextColumn::make('currency')->label('Currency')->sortable(),
                 TextColumn::make('created_at')->label('Created At')->dateTime()->sortable(),
@@ -85,12 +85,9 @@ class OrdersResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('View Order Details'),
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                //
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -106,9 +103,8 @@ class OrdersResource extends Resource
     {
         return [
             'index' => Pages\ListOrders::route('/'),
-            'create' => Pages\CreateOrders::route('/create'),
+            'view' => Pages\ViewOrder::route('/{record}'),
             'edit' => Pages\EditOrders::route('/{record}/edit'),
-            'view' => Pages\ViewOrder::route('/{record}/view'),
         ];
     }
 }
