@@ -38,6 +38,7 @@ class ReservationsSettings extends Page
     public ?string $enable_occasions = '';
     public ?string $enable_occasion_items = '';
     public ?string $enable_occasion_items_payment = '';
+    public ?string $minimum_occasion_items_purchase_amount = '100';
     public ?string $add_calculated_vat = '';
     public ?string $vat_value = '';
     public ?string $enable_booking_notice = '';
@@ -49,6 +50,8 @@ class ReservationsSettings extends Page
     public ?string $occasion_items_title_ar = '';
     public ?string $occasion_items_notice_en = '';
     public ?string $occasion_items_notice_ar = '';
+    public ?string $minimum_occasion_items_purchase_amount_error_message_en = '';
+    public ?string $minimum_occasion_items_purchase_amount_error_message_ar = '';
     public ?array $occasions = [];
     public ?array $allergies = [];
     public ?string $enable_personnel_booking_email_notification = '';
@@ -69,6 +72,7 @@ class ReservationsSettings extends Page
         $this->enable_occasions = Setting::where('key', 'enable_occasions')->first()?->value ?? '';
         $this->enable_occasion_items = Setting::where('key', 'enable_occasion_items')->first()?->value ?? '';
         $this->enable_occasion_items_payment = Setting::where('key', 'enable_occasion_items_payment')->first()?->value ?? '';
+        $this->minimum_occasion_items_purchase_amount = Setting::where('key', 'minimum_occasion_items_purchase_amount')->first()?->value ?? '100';
         $this->add_calculated_vat = Setting::where('key', 'add_calculated_vat')->first()?->value ?? false;
         $this->vat_value = Setting::where('key', 'vat_value')->first()?->value ?? false;
         $this->enable_booking_notice = Setting::where('key', 'enable_booking_notice')->first()?->value ?? true;
@@ -80,6 +84,8 @@ class ReservationsSettings extends Page
         $this->occasion_items_title_ar = Setting::where('key', 'occasion_items_title_ar')->first()?->value ?? '';
         $this->occasion_items_notice_en = Setting::where('key', 'occasion_items_notice_en')->first()?->value ?? '';
         $this->occasion_items_notice_ar = Setting::where('key', 'occasion_items_notice_ar')->first()?->value ?? '';
+        $this->minimum_occasion_items_purchase_amount_error_message_en = Setting::where('key', 'minimum_occasion_items_purchase_amount_error_message_en')->first()?->value ?? '';
+        $this->minimum_occasion_items_purchase_amount_error_message_ar = Setting::where('key', 'minimum_occasion_items_purchase_amount_error_message_ar')->first()?->value ?? '';
         $this->occasions = json_decode(Setting::where('key', 'occasions')->first()?->value, true) ?? [];
         $this->allergies = json_decode(Setting::where('key', 'allergies')->first()?->value, true) ?? [];
         $this->enable_personnel_booking_email_notification = Setting::where('key', 'enable_personnel_booking_email_notification')->first()?->value ?? '';
@@ -116,6 +122,12 @@ class ReservationsSettings extends Page
             ->helperText('Enable occasion special items to be purchased, like Flowers, Cakes etc.'),
             Toggle::make('enable_occasion_items_payment')->label('Enable Payment for Special Occassion Items')
             ->helperText('Enable payment for occasion special items reservation.'),
+            TextInput::make('minimum_occasion_items_purchase_amount')
+            ->label('Minimum Occasion Items Purchase Amount')
+            ->helperText('The minimum amount to include special occasion items in reservation, bellow this amount user can not reserve special occasion items')
+            ->numeric()
+            ->default(100)
+            ->required(),
             Toggle::make('add_calculated_vat')->label('Add Calculated VAT')
             ->helperText('Add calculated VAT to the total price.')->live(),
             TextInput::make('vat_value')->label('VAT Value')->required()->numeric()->hidden(fn (Get $get): bool => ! $get('add_calculated_vat')),
@@ -182,6 +194,14 @@ class ReservationsSettings extends Page
                     'xs' => 1,
                     'sm' => 2,
                 ]),
+                Fieldset::make('Minimum Occasion Special Item Error Message')
+                ->schema([
+                    Textarea::make('minimum_occasion_items_purchase_amount_error_message_en')->label('Error Message in English')->required()->rows(5),
+                    Textarea::make('minimum_occasion_items_purchase_amount_error_message_ar')->label('Error Message in Arabic')->required()->rows(5),
+                ])->columns([
+                    'xs' => 1,
+                    'sm' => 2,
+                ]),
             ])
             ->collapsed(),
             Section::make('Email Notifications Settings')
@@ -218,6 +238,7 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'enable_occasions'], ['value' => $this->enable_occasions]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items'], ['value' => $this->enable_occasion_items]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items_payment'], ['value' => $this->enable_occasion_items_payment]);
+        Setting::updateOrCreate(['key' => 'minimum_occasion_items_purchase_amount'], ['value' => $this->minimum_occasion_items_purchase_amount]);
         Setting::updateOrCreate(['key' => 'add_calculated_vat'], ['value' => $this->add_calculated_vat]);
         Setting::updateOrCreate(['key' => 'vat_value'], ['value' => $this->vat_value]);
         Setting::updateOrCreate(['key' => 'booking_intro_en'], ['value' => $this->booking_intro_en]);
@@ -228,6 +249,8 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'occasion_items_title_ar'], ['value' => $this->occasion_items_title_ar]);
         Setting::updateOrCreate(['key' => 'occasion_items_notice_en'], ['value' => $this->occasion_items_notice_en]);
         Setting::updateOrCreate(['key' => 'occasion_items_notice_ar'], ['value' => $this->occasion_items_notice_ar]);
+        Setting::updateOrCreate(['key' => 'minimum_occasion_items_purchase_amount_error_message_en'], ['value' => $this->minimum_occasion_items_purchase_amount_error_message_en]);
+        Setting::updateOrCreate(['key' => 'minimum_occasion_items_purchase_amount_error_message_ar'], ['value' => $this->minimum_occasion_items_purchase_amount_error_message_ar]);
         Setting::updateOrCreate(['key' => 'occasions'], ['value' => json_encode($this->occasions)]);
         Setting::updateOrCreate(['key' => 'allergies'], ['value' => json_encode($this->allergies)]);
         Setting::updateOrCreate(['key' => 'enable_personnel_booking_email_notification'], ['value' => $this->enable_personnel_booking_email_notification]);

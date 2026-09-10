@@ -79,10 +79,13 @@ class SettingsController extends Controller
             'sevenrooms_venue_id',
             'enable_occasions',
             'enable_occasion_items',
+            'minimum_occasion_items_purchase_amount',
             'occasion_items_title_en',
             'occasion_items_title_ar',
             'occasion_items_notice_en',
             'occasion_items_notice_ar',
+            'minimum_occasion_items_purchase_amount_error_message_en',
+            'minimum_occasion_items_purchase_amount_error_message_ar',
         ];
         $reservation_settings = Setting::whereIn('key', $keys)->get()->pluck('value', 'key')->toArray();
         // dump($reservation_settings);
