@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ContactsController;
 use App\Http\Controllers\Api\PagesController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReservationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;

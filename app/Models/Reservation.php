@@ -3,10 +3,33 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Reservation extends Model
 {
     //
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            // Automatically generate a unique 8-character string
+            $model->reservation_id = self::generateUniqueHash();
+        });
+    }
+
+    /**
+     * Generate a truly unique 8-character hash ID.
+     */
+    protected static function generateUniqueHash(): string
+    {
+        do {
+            // Generates a random alphanumeric string (letters and numbers)
+            $hash = Str::random(8);
+        } while (self::where('reservation_id', $hash)->exists()); // Prevents collisions
+
+        return $hash;
+    }
+
+
     protected $fillable = [
         'status',
         'date',

@@ -131,7 +131,7 @@ class ReservationController extends Controller
 
     public function getReservation(Request $request)
     {
-        $reservation = Reservation::where('sevenrooms_reservation_id', $request->id)->first();
+        $reservation = Reservation::where('reservation_id', $request->id)->first();
         $this->output->writeln('Reservation request by id: '.json_encode($reservation));
         // fix returns when reservation not found
         if ($reservation) {

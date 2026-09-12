@@ -301,7 +301,6 @@ class ReservationService
 
             if (! $order) {
                 $order = Order::create([
-                    'reservation_id' => $reservation->id,
                     'subtotal' => 0,
                     'discount' => 0,
                     'deposit' => 0,
@@ -337,6 +336,7 @@ class ReservationService
             Log::alert('Created reservation order with data: '.json_encode($reservation->order).' and items: '.json_encode($reservation->order->items));
             $this->sendReservationOrderNotice($reservation, $reservation->order);
         }
+        $reservation->refresh();
 
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];
     }
