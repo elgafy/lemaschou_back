@@ -11,6 +11,7 @@ readonly class PaymentResult
         public ?float $amount = null,
         public ?string $currency = null,
         public ?string $rrn = null,
+        public ?string $type = null,
         public ?array $rawResponse = null,
     ) {}
 
@@ -27,5 +28,15 @@ readonly class PaymentResult
     public function isPending(): bool
     {
         return $this->status === 'pending';
+    }
+
+    public function isFinal(): bool
+    {
+        return in_array($this->status, ['approved', 'declined']);
+    }
+
+    public function isRefund(): bool
+    {
+        return in_array($this->type ?? '', ['Refund', 'Void']);
     }
 }

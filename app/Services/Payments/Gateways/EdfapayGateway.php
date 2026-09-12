@@ -112,6 +112,7 @@ class EdfapayGateway implements PaymentGatewayInterface
             amount: isset($payload['amount']) ? (float) $payload['amount'] : null,
             currency: $payload['currencyCode'] ?? null,
             rrn: $payload['rrn'] ?? null,
+            type: $payload['type'] ?? null,
             rawResponse: $payload,
         );
     }

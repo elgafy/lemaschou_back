@@ -90,11 +90,21 @@ class PaymentService
             return;
         }
 
+        // Skip intermediate statuses (Pending, Redirect) — only process final outcomes
+        if (! $result->isFinal() && ! $result->isRefund()) {
+            Log::info('Skipping intermediate webhook status', [
+                'status' => $result->status,
+                'transaction_id' => $result->transactionId,
+            ]);
+
+            return;
+        }
+
         $payment = Payment::where('gateway_transaction_id', $result->transactionId)->first();
 
         // If no payment found by transaction ID, try by order ID
         if (! $payment && $result->orderId) {
-            $order = Order::find($result->orderId);
+            $order = Order::find((int) $result->orderId);
             if ($order) {
                 $payment = $order->payments()->where('status', 'pending')->first();
             }
@@ -104,6 +114,17 @@ class PaymentService
             Log::warning('Payment not found for webhook', [
                 'transaction_id' => $result->transactionId,
                 'order_id' => $result->orderId,
+            ]);
+
+            return;
+        }
+
+        // Idempotency: never downgrade a finalized payment
+        if (in_array($payment->status, ['approved', 'declined']) && ! $result->isRefund()) {
+            Log::info('Webhook ignored — payment already finalized', [
+                'payment_id' => $payment->id,
+                'current_status' => $payment->status,
+                'webhook_status' => $result->status,
             ]);
 
             return;
@@ -123,9 +144,10 @@ class PaymentService
         // Update order status
         $order = $payment->order;
         if ($order) {
-            $order->status = match ($result->status) {
-                'approved' => 'paid',
-                'declined' => 'failed',
+            $order->status = match (true) {
+                $result->isRefund() => 'refunded',
+                $result->isApproved() => 'paid',
+                $result->isDeclined() => 'failed',
                 default => $order->status,
             };
             $order->save();
@@ -134,6 +156,7 @@ class PaymentService
         Log::info('Payment processed', [
             'payment_id' => $payment->id,
             'status' => $payment->status,
+            'type' => $result->type,
             'order_id' => $order?->id,
             'order_status' => $order?->status,
         ]);
