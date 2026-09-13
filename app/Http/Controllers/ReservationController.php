@@ -98,6 +98,10 @@ class ReservationController extends Controller
         $this->sevenroomsService->sevenroomsBook($reservation, $user);
 
         // Build response data
+        if ($order) {
+            $order->makeHidden(['payment_processor']);
+        }
+
         $responseData = [
             'user_token' => $token,
             'reservation' => json_encode($reservation),
@@ -132,7 +136,17 @@ class ReservationController extends Controller
 
     public function getReservation(Request $request)
     {
-        $reservation = Reservation::where('reservation_id', $request->id)->first();
+        $reservation = Reservation::with(['order.items'])
+            ->where('reservation_id', $request->id)
+            ->first();
+
+        if ($reservation && $reservation->order) {
+            $reservation->order->makeHidden(['payment_processor', 'payments']);
+            foreach ($reservation->order->items as $item) {
+                $item->makeHidden(['id', 'order_id', 'itemable_type', 'itemable_id', 'created_at', 'updated_at']);
+            }
+        }
+
         $this->output->writeln('Reservation request by id: '.json_encode($reservation));
         // fix returns when reservation not found
         if ($reservation) {

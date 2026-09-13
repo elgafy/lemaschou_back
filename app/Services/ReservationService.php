@@ -106,6 +106,7 @@ class ReservationService
             'deposite' => 'nullable|numeric',
             'cardContent' => 'nullable|string|max:255',
             'giftCard' => 'nullable|integer|exists:gift_cards,id',
+            'seatingTime' => 'nullable|string|max:20',
             'allergic' => 'nullable|boolean',
             'allergies' => 'nullable|array',
             'allergies.*' => 'string|max:255',
@@ -140,9 +141,7 @@ class ReservationService
             'terms_accepted' => (bool) $validated['termsAccepted'],
             'payment_terms_accepted' => (bool) $validated['paymentPolicyAccepted'],
             'deposite' => $validated['deposite'] ?? null,
-            'options' => ! empty($validated['cardContent']) ? [
-                'card_content' => $validated['cardContent'],
-            ] : null,
+            'options' => self::buildOptions($validated),
         ]);
 
         // Create or get the user
@@ -400,5 +399,20 @@ class ReservationService
                 $this->output->writeln('Queued reservation order notice to: '.$email);
             }
         }
+    }
+
+    private static function buildOptions(array $validated): ?array
+    {
+        $options = [];
+
+        if (! empty($validated['cardContent'])) {
+            $options['card_content'] = $validated['cardContent'];
+        }
+
+        if (! empty($validated['seatingTime'])) {
+            $options['seating_time'] = $validated['seatingTime'];
+        }
+
+        return ! empty($options) ? $options : null;
     }
 }

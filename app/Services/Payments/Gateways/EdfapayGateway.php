@@ -20,7 +20,7 @@ class EdfapayGateway implements PaymentGatewayInterface
         $this->apiKey = config('payment.gateways.edfapay.api_key');
     }
 
-    public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, int $reservationId): array
+    public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, string $reservationId): array
     {
         $frontendUrl = rtrim(env('FRONTEND_URL'), '/');
         $successUrl = $frontendUrl.'/'.$locale.'/'.$reservationId.'/confirmation';

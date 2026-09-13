@@ -12,7 +12,7 @@ interface PaymentGatewayInterface
      *
      * @return array{redirect_url: string, gateway_session_id: string}
      */
-    public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, int $reservationId): array;
+    public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, string $reservationId): array;
 
     /**
      * Verify a transaction status by its gateway transaction ID.
