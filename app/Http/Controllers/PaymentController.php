@@ -70,14 +70,17 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
-        Log::info('Webhook received', ['payload' => $request->all()]);
+        // Edfapay sends raw JSON body, not form data — parse it manually
+        $payload = json_decode($request->getContent(), true) ?? $request->all();
+
+        Log::info('Webhook received', ['payload' => $payload]);
 
         try {
-            $this->paymentService->handleWebhook($request->all());
+            $this->paymentService->handleWebhook($payload);
         } catch (\Throwable $e) {
             Log::error('Payment webhook error', [
                 'error' => $e->getMessage(),
-                'payload' => $request->all(),
+                'payload' => $payload,
             ]);
         }
 
