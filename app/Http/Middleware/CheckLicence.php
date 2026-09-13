@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Output\ConsoleOutput;
-use SebastianBergmann\Environment\Console;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckLicence
@@ -15,14 +14,20 @@ class CheckLicence
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip licence check for payment webhooks (external gateway callbacks)
+        if ($request->is('api/payments/webhook')) {
+            return $next($request);
+        }
+
         $response = Http::get('https://gafystudio.com/check/lemaschou/check.json');
         if ($response->failed()) {
-            $output = new ConsoleOutput();
-            $output->writeln("Check failed: " . $response->status());
+            $output = new ConsoleOutput;
+            $output->writeln('Check failed: '.$response->status());
+
             return next($request);
         }
         $data = $response->json();
@@ -36,6 +41,7 @@ class CheckLicence
             $res = [
                 'message' => 'check code integrity',
             ];
+
             return response(json_encode($res), 500);
         } else {
             return $next($request);
