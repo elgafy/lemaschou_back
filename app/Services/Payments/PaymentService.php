@@ -21,13 +21,15 @@ class PaymentService
      *
      * @return array{payment: Payment, redirect_url: string}
      */
-    public function initiate(Order $order, Reservation $reservation): array
+    public function initiate(Order $order, Reservation $reservation, string $locale = 'en'): array
     {
         $result = $this->gateway->initiate(
             $order,
             $reservation->first_name.' '.$reservation->last_name,
             $reservation->email,
             $reservation->mobile ?? '',
+            $locale,
+            $reservation->reservation_id,
         );
 
         $payment = Payment::create([

@@ -21,6 +21,7 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'order_id' => 'required|integer|exists:orders,id',
+            'locale' => 'nullable|string|max:2',
         ]);
 
         $order = Order::with('reservation')->findOrFail($validated['order_id']);
@@ -40,7 +41,8 @@ class PaymentController extends Controller
         }
 
         try {
-            $result = $this->paymentService->initiate($order, $order->reservation);
+            $locale = $validated['locale'] ?? 'en';
+            $result = $this->paymentService->initiate($order, $order->reservation, $locale);
 
             return response()->json([
                 'success' => true,

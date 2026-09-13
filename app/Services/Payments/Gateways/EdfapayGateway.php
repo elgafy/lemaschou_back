@@ -20,9 +20,13 @@ class EdfapayGateway implements PaymentGatewayInterface
         $this->apiKey = config('payment.gateways.edfapay.api_key');
     }
 
-    public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone): array
+    public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, int $reservationId): array
     {
-        $reservation = $order->reservation;
+        $frontendUrl = rtrim(env('FRONTEND_URL'), '/');
+        $successUrl = $frontendUrl.'/'.$locale.'/'.$reservationId.'/confirmation';
+        $failureUrl = $frontendUrl.'/'.$locale.'/'.$reservationId.'/payment-failed';
+        // $successUrl = 'https://success.com';
+        // $failureUrl = 'https://failure.com';
 
         $response = Http::withHeaders([
             'X-API-KEY' => $this->apiKey,
@@ -38,8 +42,8 @@ class EdfapayGateway implements PaymentGatewayInterface
                 'phone' => $customerPhone,
             ],
             'auth' => 'N',
-            'successUrl' => config('payment.success_url').'?order_id='.$order->id,
-            'failureUrl' => config('payment.failure_url').'?order_id='.$order->id,
+            'successUrl' => $successUrl,
+            'failureUrl' => $failureUrl,
         ]);
 
         if ($response->failed()) {

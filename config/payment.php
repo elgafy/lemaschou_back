@@ -36,6 +36,6 @@ return [
     | These are passed to the gateway as callback URLs.
     |
     */
-    'success_url' => env('PAYMENT_SUCCESS_URL', 'https://lemaschou.gafystudio.com/en/payment/success'),
-    'failure_url' => env('PAYMENT_FAILURE_URL', 'https://lemaschou.gafystudio.com/en/payment/failure'),
+    'success_url' => env('FRONTEND_URL', 'https://lemaschou.gafystudio.com'),
+    'failure_url' => env('FRONTEND_URL', 'https://lemaschou.gafystudio.com'),
 ];

@@ -111,6 +111,7 @@ class ReservationService
             'allergies.*' => 'string|max:255',
             'termsAccepted' => 'required|boolean',
             'paymentPolicyAccepted' => 'required|boolean',
+            'locale' => 'nullable|string|max:2',
         ]);
 
         $occasionSelectedItems = $validated['occasionSelectedItems'] ?? [];

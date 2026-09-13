@@ -107,8 +107,9 @@ class ReservationController extends Controller
         // If order has a balance, initiate payment and return redirect URL
         if ($order && (float) $order->total > 0) {
             try {
+                $locale = $request->input('locale', 'en');
                 $paymentService = app(PaymentService::class);
-                $paymentResult = $paymentService->initiate($order, $reservation);
+                $paymentResult = $paymentService->initiate($order, $reservation, $locale);
                 $responseData['payment'] = [
                     'payment_id' => $paymentResult['payment']->id,
                     'redirect_url' => $paymentResult['redirect_url'],
