@@ -11,6 +11,8 @@ class OrderItems extends Model
         'itemable_id',
         'itemable_type',
         'name',
+        'variation',
+        'category',
         'quantity',
         'unit_price',
         'sub_total',

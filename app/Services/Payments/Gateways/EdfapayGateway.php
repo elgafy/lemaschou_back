@@ -23,8 +23,8 @@ class EdfapayGateway implements PaymentGatewayInterface
     public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, string $reservationId): array
     {
         $frontendUrl = rtrim(env('FRONTEND_URL'), '/');
-        $successUrl = $frontendUrl.'/'.$locale.'/'.$reservationId.'/confirmation';
-        $failureUrl = $frontendUrl.'/'.$locale.'/'.$reservationId.'/payment-failed';
+        $successUrl = $frontendUrl.'/'.$locale.'/reservation/'.$reservationId.'/confirmation';
+        $failureUrl = $frontendUrl.'/'.$locale.'/reservation/'.$reservationId.'/payment-failed';
         // $successUrl = 'https://success.com';
         // $failureUrl = 'https://failure.com';
 

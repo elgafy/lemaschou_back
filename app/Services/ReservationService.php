@@ -188,6 +188,8 @@ class ReservationService
                     'price' => $itemPrice,
                     'name' => $itemName,
                     'quantity' => (int) ($selected['quantity'] ?? 1),
+                    'variation' => $variationValue,
+                    'category' => $item->category ? OccasionSpecialItemsCategory::find($item->category)?->name_en : null,
                 ];
             }
             $this->output->writeln('Occasion items: '.json_encode($items));
@@ -233,6 +235,8 @@ class ReservationService
                     'itemable_id' => $item->id,
                     'itemable_type' => OccasionSpecialItems::class,
                     'name' => $itemName,
+                    'variation' => $entry['variation'] ?? null,
+                    'category' => $entry['category'] ?? null,
                     'quantity' => $itemQuantity,
                     'unit_price' => $itemPrice,
                     'sub_total' => $itemSubTotal,
