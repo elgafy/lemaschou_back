@@ -20,6 +20,11 @@ interface PaymentGatewayInterface
     public function verify(string $transactionId): PaymentResult;
 
     /**
+     * Verify a transaction status by order ID.
+     */
+    public function verifyByOrderId(string $orderId): PaymentResult;
+
+    /**
      * Process an incoming webhook payload and return normalized result.
      */
     public function handleWebhook(array $payload): PaymentResult;

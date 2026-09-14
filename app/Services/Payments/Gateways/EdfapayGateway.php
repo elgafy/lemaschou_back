@@ -75,11 +75,10 @@ class EdfapayGateway implements PaymentGatewayInterface
 
     public function verify(string $transactionId): PaymentResult
     {
+        // Use the dedicated Transaction Details endpoint
         $response = Http::withHeaders([
             'X-API-KEY' => $this->apiKey,
-        ])->get($this->baseUrl.'transactions/filterTransaction', [
-            'id' => $transactionId,
-        ]);
+        ])->get($this->baseUrl.'transactions/'.$transactionId.'/details');
 
         if ($response->failed()) {
             Log::error('Edfapay verify failed', [
@@ -94,12 +93,75 @@ class EdfapayGateway implements PaymentGatewayInterface
             );
         }
 
-        $transaction = $response->json('data.content.0');
+        $transaction = $response->json('data.transactionDetails');
+
+        if (! $transaction) {
+            return new PaymentResult(
+                status: 'pending',
+                transactionId: $transactionId,
+                rawResponse: $response->json(),
+            );
+        }
 
         return new PaymentResult(
-            status: $this->mapStatus($transaction['transactionStatus'] ?? $transaction['paymentStatus'] ?? ''),
+            status: $this->mapStatus($transaction['paymentStatus'] ?? $transaction['transactionStatus'] ?? ''),
             transactionId: $transaction['transactionId'] ?? $transactionId,
             orderId: $transaction['orderId'] ?? null,
+            amount: isset($transaction['amount']) ? (float) $transaction['amount'] : null,
+            currency: $transaction['currencyCode'] ?? null,
+            rrn: $transaction['rrn'] ?? null,
+            rawResponse: $transaction,
+        );
+    }
+
+    public function verifyByOrderId(string $orderId): PaymentResult
+    {
+        // filterTransaction with no params returns recent transactions (default 10)
+        $response = Http::withHeaders([
+            'X-API-KEY' => $this->apiKey,
+        ])->get($this->baseUrl.'transactions/filterTransaction');
+
+        if ($response->failed()) {
+            Log::error('Edfapay verify by orderId failed', [
+                'order_id' => $orderId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return new PaymentResult(
+                status: 'pending',
+                orderId: $orderId,
+                rawResponse: $response->json(),
+            );
+        }
+
+        $transactions = $response->json('data.content', []);
+        $transaction = null;
+
+        foreach ($transactions as $txn) {
+            if (($txn['orderId'] ?? '') === $orderId) {
+                $transaction = $txn;
+                break;
+            }
+        }
+
+        if (! $transaction) {
+            Log::info('Edfapay no transaction found for orderId', [
+                'order_id' => $orderId,
+                'transactions_checked' => count($transactions),
+            ]);
+
+            return new PaymentResult(
+                status: 'pending',
+                orderId: $orderId,
+                rawResponse: $response->json(),
+            );
+        }
+
+        return new PaymentResult(
+            status: $this->mapStatus($transaction['paymentStatus'] ?? $transaction['transactionStatus'] ?? ''),
+            transactionId: $transaction['transactionId'] ?? null,
+            orderId: $transaction['orderId'] ?? $orderId,
             amount: isset($transaction['amount']) ? (float) $transaction['amount'] : null,
             currency: $transaction['currencyCode'] ?? null,
             rrn: $transaction['rrn'] ?? null,

@@ -136,31 +136,56 @@ class ReservationController extends Controller
 
     public function getReservation(Request $request)
     {
-        $reservation = Reservation::with(['order.items'])
+        $reservation = Reservation::with(['order.items', 'order.payments'])
             ->where('reservation_id', $request->id)
             ->first();
 
-        if ($reservation && $reservation->order) {
+        // fix returns when reservation not found
+        if (! $reservation) {
+            return response()->json([
+                'success' => false,
+                'data' => 'Reservation not found',
+                'message' => 'Reservation not found',
+            ], 404);
+        }
+
+        // Fail-safe: if order has pending payment, verify with Edfapay directly
+        if ($reservation->order) {
+            $pendingPayment = $reservation->order->payments
+                ->where('status', 'pending')
+                ->first();
+
+            if ($pendingPayment) {
+                try {
+                    $paymentService = app(PaymentService::class);
+
+                    if ($pendingPayment->gateway_transaction_id) {
+                        // We have a transaction ID — use the direct details endpoint
+                        $paymentService->verify($pendingPayment->gateway_transaction_id);
+                    } else {
+                        // No transaction ID — search Edfapay by order ID
+                        $paymentService->verifyByOrderId((string) $reservation->order->id);
+                    }
+
+                    // Reload relationships after potential status update
+                    $reservation->load(['order.items', 'order.payments']);
+                } catch (\Throwable $e) {
+                    Log::error('Payment verification failed during getReservation', [
+                        'order_id' => $reservation->order->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             $reservation->order->makeHidden(['payment_processor', 'payments']);
             foreach ($reservation->order->items as $item) {
                 $item->makeHidden(['id', 'order_id', 'itemable_type', 'itemable_id', 'created_at', 'updated_at']);
             }
         }
 
-        $this->output->writeln('Reservation request by id: '.json_encode($reservation));
-        // fix returns when reservation not found
-        if ($reservation) {
-            return response()->json([
-                'success' => true,
-                'data' => $reservation,
-            ], 200);
-        }
-
         return response()->json([
-            'success' => false,
-            'data' => 'Reservation not found',
-            'message' => 'Reservation not found',
-        ], 404);
-
+            'success' => true,
+            'data' => $reservation,
+        ], 200);
     }
 }

@@ -82,6 +82,20 @@ class PaymentService
     }
 
     /**
+     * Verify a payment by order ID — fail-safe when webhook didn't arrive.
+     */
+    public function verifyByOrderId(string $orderId): PaymentResult
+    {
+        $result = $this->gateway->verifyByOrderId($orderId);
+
+        if ($result->isFinal() || $result->isRefund()) {
+            $this->processResult($result);
+        }
+
+        return $result;
+    }
+
+    /**
      * Apply a PaymentResult to the Payment and Order records.
      */
     private function processResult(PaymentResult $result): void
