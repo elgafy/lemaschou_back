@@ -105,7 +105,7 @@ class ReservationResource extends Resource
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state) => match ($state) {
-                        'pending' => 'warning',
+                        'hold' => 'warning',
                         'confirmed' => 'success',
                         'cancelled' => 'danger',
                         default => 'gray',
