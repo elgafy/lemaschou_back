@@ -162,8 +162,10 @@ class ReservationService
         // Create or get the user
         $user = User::firstOrCreate(
             ['email' => $request['emailAddress']],
-            ['name' => $request['firstName'].' '.$request['lastName']],
-            ['password' => bcrypt(Str::random(16))],
+            [
+                'name' => $request['firstName'].' '.$request['lastName'],
+                'password' => bcrypt(Str::random(16)),
+            ],
         );
         $user->assignRole('guest');
         Auth::login($user);
