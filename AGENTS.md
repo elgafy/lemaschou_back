@@ -91,13 +91,13 @@ Sevenrooms API token cached separately as `apiToken` (23h TTL) in `SevenroomsSer
 - `.editorconfig`: 4 spaces, LF, final newline
 - Filament resources/pages auto-discovered from `app/Filament/Resources/` and `app/Filament/Pages/`
 - `app/Helper/helpers.php` autoloaded via `composer.json` `files` array
-- API routes prefixed: `/api/settings/*`, `/api/reservations/*`, `/api/pages/*`
+- API routes prefixed: `/api/settings/*`, `/api/reservations/*`, `/api/pages/*`, `/api/payments/*`
 - `.agents/skills/laravel-specialist/` available for Laravel-specific guidance
 
 ## Gotchas
 
 - `CheckLicence` middleware makes **external HTTP calls** on reservation routes — tests may fail without network
-- `PaymentController` is empty — payment flow not yet implemented
+- **Stale route cache causes 404s.** `bootstrap/cache/routes-v7.php` is loaded instead of `routes/*.php`. After adding/changing routes, run `php artisan route:clear` (or `optimize:clear`) or new routes return 404 `"url not found"`. Never run `route:cache` in dev without re-running it after route changes.
 - Model naming inconsistencies: `OccasionSpecialItems` (verbose), `OrderItems` (should be singular `OrderItem`), `payment.php` (lowercase filename)
 - Sevenrooms env vars required: `SEVENROOMS_BASE_URL`, `SEVENROOMS_CLIENT_ID`, `SEVENROOMS_CLIENT_SECRET`, `SEVENROOMS_VENUE_ID`
 - `config/response.php` must be updated when adding new API response keys (en + ar)
