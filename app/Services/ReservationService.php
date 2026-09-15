@@ -86,6 +86,21 @@ class ReservationService
         Log::alert('Making reservation with data: '.json_encode($request->all()));
         $this->output->writeln('Making reservation with data: '.json_encode($request->all()));
         $this->output->writeln('Request: '.json_encode($request->all('occasionSelectedItems')));
+
+        // Normalize boolean fields — mobile clients may send "true"/"false" strings
+        $request->merge(self::normalizeBooleans($request, [
+            'occasion',
+            'allergic',
+            'termsAccepted',
+            'paymentPolicyAccepted',
+        ]));
+
+        // Normalize array fields — mobile clients may send JSON-encoded strings
+        $request->merge(self::normalizeJsonArrays($request, [
+            'occasionSelectedItems',
+            'allergies',
+        ]));
+
         $validated = $request->validate([
             'date' => 'required|date',
             'time' => 'required|string|max:10',
@@ -418,5 +433,69 @@ class ReservationService
         }
 
         return ! empty($options) ? $options : null;
+    }
+
+    /**
+     * Convert string booleans ("true"/"false"/"1"/"0") to real booleans.
+     * Mobile clients often send form-encoded values as strings.
+     */
+    private static function normalizeBooleans($request, array $fields): array
+    {
+        $normalized = [];
+
+        foreach ($fields as $field) {
+            if (! $request->has($field)) {
+                continue;
+            }
+
+            $value = $request->input($field);
+
+            if (is_bool($value) || is_null($value)) {
+                continue;
+            }
+
+            if (is_string($value)) {
+                $lower = strtolower(trim($value));
+                if (in_array($lower, ['true', '1', 'yes', 'on'], true)) {
+                    $normalized[$field] = true;
+                } elseif (in_array($lower, ['false', '0', 'no', 'off', ''], true)) {
+                    $normalized[$field] = false;
+                }
+            } elseif (is_numeric($value)) {
+                $normalized[$field] = (bool) $value;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Decode JSON-encoded array strings into real arrays.
+     * Mobile clients may send arrays as JSON strings.
+     */
+    private static function normalizeJsonArrays($request, array $fields): array
+    {
+        $normalized = [];
+
+        foreach ($fields as $field) {
+            if (! $request->has($field)) {
+                continue;
+            }
+
+            $value = $request->input($field);
+
+            if (is_array($value) || is_null($value)) {
+                continue;
+            }
+
+            if (is_string($value)) {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $normalized[$field] = $decoded;
+                }
+            }
+        }
+
+        return $normalized;
     }
 }
