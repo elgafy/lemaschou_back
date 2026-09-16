@@ -22,11 +22,8 @@ class EdfapayGateway implements PaymentGatewayInterface
 
     public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, string $reservationId): array
     {
-        $frontendUrl = rtrim(env('FRONTEND_URL'), '/');
-        $successUrl = $frontendUrl.'/'.$locale.'/reservation/'.$reservationId.'/confirmation';
-        $failureUrl = $frontendUrl.'/'.$locale.'/reservation/'.$reservationId.'/payment-failed';
-        // $successUrl = 'https://success.com';
-        // $failureUrl = 'https://failure.com';
+        $successUrl = $this->buildRedirectUrl(config('payment.success_url'), $locale, $reservationId);
+        $failureUrl = $this->buildRedirectUrl(config('payment.failure_url'), $locale, $reservationId);
 
         $response = Http::withHeaders([
             'X-API-KEY' => $this->apiKey,
@@ -71,6 +68,18 @@ class EdfapayGateway implements PaymentGatewayInterface
             'redirect_url' => $redirectUrl,
             'gateway_session_id' => $sessionId,
         ];
+    }
+
+    /**
+     * Fill the {locale} and {reservation_id} placeholders of a redirect URL template.
+     */
+    private function buildRedirectUrl(string $template, string $locale, string $reservationId): string
+    {
+        return str_replace(
+            ['{locale}', '{reservation_id}'],
+            [$locale, $reservationId],
+            $template
+        );
     }
 
     public function verify(string $transactionId): PaymentResult

@@ -1,5 +1,7 @@
 <?php
 
+$frontendUrl = rtrim(env('FRONTEND_URL', 'https://lemaschou.gafystudio.com'), '/');
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -35,7 +37,17 @@ return [
     | Where the customer is redirected after payment success or failure.
     | These are passed to the gateway as callback URLs.
     |
+    | These are templates: {locale} and {reservation_id} are replaced at
+    | runtime by the gateway. Override them with PAYMENT_SUCCESS_URL /
+    | PAYMENT_FAILURE_URL if the frontend routes change.
+    |
     */
-    'success_url' => env('FRONTEND_URL', 'https://lemaschou.gafystudio.com'),
-    'failure_url' => env('FRONTEND_URL', 'https://lemaschou.gafystudio.com'),
+    'success_url' => env(
+        'PAYMENT_SUCCESS_URL',
+        $frontendUrl.'/{locale}/reservation/{reservation_id}/confirmation'
+    ),
+    'failure_url' => env(
+        'PAYMENT_FAILURE_URL',
+        $frontendUrl.'/{locale}/reservation/{reservation_id}/payment-failed'
+    ),
 ];
