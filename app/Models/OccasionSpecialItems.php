@@ -20,6 +20,7 @@ class OccasionSpecialItems extends Model
         'has_variations',
         'variations',
         'options',
+        'order',
     ];
 
     protected $casts = [

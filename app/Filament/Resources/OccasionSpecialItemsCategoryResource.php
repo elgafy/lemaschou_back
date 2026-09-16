@@ -3,9 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OccasionSpecialItemsCategoryResource\Pages;
-use App\Filament\Resources\OccasionSpecialItemsCategoryResource\RelationManagers;
 use App\Models\OccasionSpecialItemsCategory;
-use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -13,20 +11,18 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OccasionSpecialItemsCategoryResource extends Resource
 {
     protected static ?string $model = OccasionSpecialItemsCategory::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-square-3-stack-3d';
+
     protected static ?string $navigationGroup = 'Reservations Management';
+
     protected static ?int $navigationSort = 6;
 
     protected static ?string $label = 'Occasion Item Categories';
-
-
 
     public static function form(Form $form): Form
     {
@@ -47,6 +43,9 @@ class OccasionSpecialItemsCategoryResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('order')
+                    ->label('No.')
+                    ->sortable(),
                 TextColumn::make('name_en')
                     ->label('Name in english')
                     ->searchable(),
@@ -54,6 +53,8 @@ class OccasionSpecialItemsCategoryResource extends Resource
                     ->label('Name in arabic')
                     ->searchable(),
             ])
+            ->defaultSort('order') // Set the default sorting by 'order'
+            ->reorderable('order') // Enable manual ordering by 'order' column
             ->filters([
                 //
             ])
@@ -66,14 +67,13 @@ class OccasionSpecialItemsCategoryResource extends Resource
                             ->success()
                             ->title('Category deleted')
                             ->body('Category deleted succsessfully')
-                    )
+                    ),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ])
-            ->defaultSort('created_at', 'desc');
+            ]);
     }
 
     public static function getRelations(): array

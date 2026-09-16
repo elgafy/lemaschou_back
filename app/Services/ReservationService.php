@@ -386,7 +386,9 @@ class ReservationService
         return Cache::remember('occasion_items', 604800, function () {
             $this->output->writeln('Occassion items cache miss');
 
-            return OccasionSpecialItemsCategory::with('items')->get();
+            return OccasionSpecialItemsCategory::with(['items' => fn ($query) => $query->orderBy('order')])
+                ->orderBy('order')
+                ->get();
         });
     }
 

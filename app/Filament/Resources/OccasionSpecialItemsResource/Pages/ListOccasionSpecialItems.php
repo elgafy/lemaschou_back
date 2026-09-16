@@ -8,10 +8,22 @@ use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
 class ListOccasionSpecialItems extends ListRecords
 {
     protected static string $resource = OccasionSpecialItemsResource::class;
+
+    /**
+     * Filament reorders with a query builder update, which bypasses Eloquent
+     * events, so the cached occasion items must be cleared manually here.
+     */
+    public function reorderTable(array $order): void
+    {
+        parent::reorderTable($order);
+
+        Cache::forget('occasion_items');
+    }
 
     protected function getHeaderActions(): array
     {
@@ -27,7 +39,7 @@ class ListOccasionSpecialItems extends ListRecords
         // Add a tab for 'All' categories (no filtering)
         $tabs['all'] = Tab::make()
             ->label('All') // Label the tab "All"
-            ->modifyQueryUsing(fn(Builder $query) => $query); // No query modification for 'All'
+            ->modifyQueryUsing(fn (Builder $query) => $query); // No query modification for 'All'
 
         // Fetch categories dynamically
         $categories = OccasionSpecialItemsCategory::get();
@@ -36,7 +48,7 @@ class ListOccasionSpecialItems extends ListRecords
         foreach ($categories as $category) {
             $tabs[$category->id] = Tab::make()
                 ->label($category->name_en) // Set the category name as the tab label
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('category', $category->id)); // Filter meals by category
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('category', $category->id)); // Filter meals by category
         }
 
         return $tabs;

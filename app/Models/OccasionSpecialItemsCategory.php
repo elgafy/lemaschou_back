@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 class OccasionSpecialItemsCategory extends Model
 {
     protected $fillable = [
-        'name_en', 'name_ar', 'order_before_period_in_hours',
+        'name_en', 'name_ar', 'order_before_period_in_hours', 'order',
     ];
 
     protected static function booted(): void
