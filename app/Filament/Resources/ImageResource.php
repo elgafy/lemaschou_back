@@ -67,8 +67,7 @@ class ImageResource extends Resource
                 ->downloadable()
                 ->openable()
                 ->maxSize('1024')
-                ->visibility('publico')
-                ->storeFileNamesIn('original_filename')
+                ->visibility('public')
                 ->nullable()
                 // ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord) // Required only on create
                 ->rules([

@@ -81,8 +81,7 @@ class AdResource extends Resource
                 ->downloadable()
                 ->openable()
                 ->maxSize('5120')
-                ->visibility('publico')
-                ->storeFileNamesIn('original_filename')
+                ->visibility('public')
                 ->rules([
                     'mimes:jpeg,png,jpg,webp',
                     'dimensions:min_width=100,min_height=100,max_width=2000,max_height=2000' // Image dimension constraints
@@ -103,8 +102,7 @@ class AdResource extends Resource
                 ->downloadable()
                 ->openable()
                 ->maxSize('5120')
-                ->visibility('publico')
-                ->storeFileNamesIn('original_filename')
+                ->visibility('public')
                 ->rules([
                     'mimes:jpeg,png,jpg,webp',
                     'dimensions:min_width=100,min_height=100,max_width=2000,max_height=2000' // Image dimension constraints

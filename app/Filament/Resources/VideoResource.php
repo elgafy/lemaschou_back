@@ -75,7 +75,7 @@ class VideoResource extends Resource
                 ->acceptedFileTypes(['video/*']) // Only allow video types
                 ->required()
                 ->maxSize(102400) // Max size in kilobytes (adjust as needed)
-                ->visibility('publico') // Set visibility to public if needed
+                ->visibility('public') // Set visibility to public if needed
                 ->hint('Upload a video file up to 100 MB in size. Only video formats (e.g., MP4, AVI, MOV) are allowed. This field is required.'),
             ]);
     }

@@ -87,8 +87,7 @@ class EventResource extends Resource
                 ->required()
                 ->openable()
                 ->maxSize('1024')
-                ->visibility('publico')
-                ->storeFileNamesIn('original_filename')
+                ->visibility('public')
                 ->rules([
                     'required',
                     'mimes:jpeg,png,jpg',

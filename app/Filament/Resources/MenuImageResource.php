@@ -81,8 +81,7 @@ class MenuImageResource extends Resource
                 ->downloadable()
                 ->openable()
                 ->maxSize('1024')
-                ->visibility('publico')
-                ->storeFileNamesIn('original_filename')
+                ->visibility('public')
                 ->required()
                 // ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord) // Required only on create
                 ->rules([
