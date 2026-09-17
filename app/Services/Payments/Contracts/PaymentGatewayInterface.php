@@ -25,6 +25,12 @@ interface PaymentGatewayInterface
     public function verifyByOrderId(string $orderId): PaymentResult;
 
     /**
+     * Build the hosted checkout URL for an existing session, so a customer
+     * can retry a payment that was never completed.
+     */
+    public function checkoutUrl(string $sessionId): string;
+
+    /**
      * Process an incoming webhook payload and return normalized result.
      */
     public function handleWebhook(array $payload): PaymentResult;

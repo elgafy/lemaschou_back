@@ -14,10 +14,18 @@ class EdfapayGateway implements PaymentGatewayInterface
 
     private string $apiKey;
 
+    private string $checkoutUrl;
+
     public function __construct()
     {
         $this->baseUrl = config('payment.gateways.edfapay.base_url');
         $this->apiKey = config('payment.gateways.edfapay.api_key');
+        $this->checkoutUrl = config('payment.gateways.edfapay.checkout_url');
+    }
+
+    public function checkoutUrl(string $sessionId): string
+    {
+        return $this->checkoutUrl.'?sessionId='.urlencode($sessionId);
     }
 
     public function initiate(Order $order, string $customerName, string $customerEmail, string $customerPhone, string $locale, string $reservationId): array

@@ -54,6 +54,24 @@ class PaymentService
     }
 
     /**
+     * Build the URL a customer can use to retry an unfinished payment.
+     * Returns null when there is no session to resume.
+     */
+    public function getRetryPaymentUrl(Order $order): ?string
+    {
+        $payment = $order->payments->firstWhere('status', 'pending')
+            ?? $order->payments->sortByDesc('id')->first();
+
+        $sessionId = $payment?->gateway_session_id;
+
+        if (! $sessionId) {
+            return null;
+        }
+
+        return $this->gateway->checkoutUrl($sessionId);
+    }
+
+    /**
      * Handle an incoming webhook from the payment gateway.
      */
     public function handleWebhook(array $payload): void

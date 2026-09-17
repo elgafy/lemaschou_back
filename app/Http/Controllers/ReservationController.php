@@ -183,9 +183,20 @@ class ReservationController extends Controller
             }
         }
 
-        return response()->json([
+        $response = [
             'success' => true,
             'data' => $reservation,
-        ], 200);
+        ];
+
+        // Offer a retry link while the order is still unpaid and the reservation is live
+        if ($reservation->order && $reservation->order->status !== 'paid' && $reservation->status !== 'cancelled') {
+            $retryPaymentUrl = app(PaymentService::class)->getRetryPaymentUrl($reservation->order);
+
+            if ($retryPaymentUrl) {
+                $response['retryPaymentUrl'] = $retryPaymentUrl;
+            }
+        }
+
+        return response()->json($response, 200);
     }
 }

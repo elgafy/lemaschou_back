@@ -26,6 +26,7 @@ return [
         'edfapay' => [
             'base_url' => env('EDFAPAY_BASE_URL'),
             'api_key' => env('EDFAPAY_API_KEY'),
+            'checkout_url' => env('EDFAPAY_CHECKOUT_URL', 'https://app.edfapay.com/pay/checkout'),
         ],
     ],
 
