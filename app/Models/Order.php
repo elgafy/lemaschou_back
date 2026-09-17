@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\ReservationService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Order extends Model
 {
@@ -16,6 +18,31 @@ class Order extends Model
         'currency',
         'status',
     ];
+
+    protected static function booted(): void
+    {
+        // Notify staff whenever an order becomes paid, whatever caused the change:
+        // gateway webhook, a status verification request, or a manual update.
+        static::updated(function (Order $order) {
+            if (! $order->wasChanged('status') || $order->status !== 'paid') {
+                return;
+            }
+
+            // Orders created for a gift card only don't carry reservation_id,
+            // so fall back to the reservation pointing at this order.
+            $reservation = $order->reservation ?? Reservation::where('order_id', $order->id)->first();
+
+            if (! $reservation) {
+                Log::warning('Reservation not found for paid order — notice email not sent', [
+                    'order_id' => $order->id,
+                ]);
+
+                return;
+            }
+
+            app(ReservationService::class)->sendReservationOrderNotice($reservation, $order);
+        });
+    }
 
     public function reservation()
     {

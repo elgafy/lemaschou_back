@@ -355,7 +355,6 @@ class ReservationService
         Log::alert('Created reservation with data: '.json_encode($reservation));
         if ($reservation->order) {
             Log::alert('Created reservation order with data: '.json_encode($reservation->order).' and items: '.json_encode($reservation->order->items));
-            $this->sendReservationOrderNotice($reservation, $reservation->order);
         }
         $reservation->refresh();
 
@@ -402,8 +401,9 @@ class ReservationService
         });
     }
 
-    // Send reservation order notice email to staff
-    private function sendReservationOrderNotice(Reservation $reservation, Order $order): void
+    // Send reservation order notice email to staff.
+    // Triggered by the Order model whenever its status changes to 'paid'.
+    public function sendReservationOrderNotice(Reservation $reservation, Order $order): void
     {
         $raw = Setting::where('key', 'reservation_notice_emails')->first()?->value;
         if (! $raw) {
