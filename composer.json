@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "achyutn/filament-log-viewer": "^0.7.0",
         "bezhansalleh/filament-shield": "^3.3",
         "bugsnag/bugsnag-laravel": "^2.28",
         "filament/filament": "^3.2",

@@ -72,6 +72,14 @@ class EdfapayGateway implements PaymentGatewayInterface
         parse_str(parse_url($redirectUrl, PHP_URL_QUERY) ?? '', $queryParams);
         $sessionId = $queryParams['sessionId'] ?? null;
 
+        Log::info('Edfapay initiate response', [
+            'order_id' => $order->id,
+            'status' => $response->status(),
+            'redirect_url' => $redirectUrl,
+            'session_id' => $sessionId,
+            'body' => $response->body(),
+        ]);
+
         return [
             'redirect_url' => $redirectUrl,
             'gateway_session_id' => $sessionId,
