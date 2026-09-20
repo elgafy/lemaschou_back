@@ -21,11 +21,15 @@ class OccasionSpecialItems extends Model
         'variations',
         'options',
         'order',
+        'active',
+        'unavailable_message_en',
+        'unavailable_message_ar',
     ];
 
     protected $casts = [
         'variations' => 'array',
         'options' => 'array',
+        'active' => 'boolean',
     ];
 
     protected static function booted(): void

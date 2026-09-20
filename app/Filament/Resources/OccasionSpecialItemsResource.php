@@ -18,7 +18,6 @@ use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Storage;
 
 class OccasionSpecialItemsResource extends Resource
 {
@@ -36,6 +35,11 @@ class OccasionSpecialItemsResource extends Resource
     {
         return $form
             ->schema([
+                Toggle::make('active')
+                    ->label('Active')
+                    ->helperText('When off, the item is not offered for reservation')
+                    ->default(true)
+                    ->columnSpanFull(),
                 TextInput::make('name_en')
                     ->label('Name in english')
                     ->required()
@@ -76,6 +80,14 @@ class OccasionSpecialItemsResource extends Resource
                     ->numeric()
                     ->minValue('0')
                     ->default('13'),
+                TextInput::make('unavailable_message_en')
+                    ->label('Unavailable Message in English')
+                    ->helperText('Shown to the customer when this item is not available due to the reservation availability period or available before time')
+                    ->maxLength(255),
+                TextInput::make('unavailable_message_ar')
+                    ->label('Unavailable Message in Arabic')
+                    ->helperText('Shown to the customer when this item is not available due to the reservation availability period or available before time')
+                    ->maxLength(255),
                 FileUpload::make('image')
                     ->disk('s3')
                     ->columns(1)
