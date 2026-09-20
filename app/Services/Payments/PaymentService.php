@@ -73,6 +73,9 @@ class PaymentService
 
     /**
      * Handle an incoming webhook from the payment gateway.
+     *
+     * The webhook payload is not trusted on its own: the real status is confirmed
+     * with the gateway immediately, and that check takes precedence.
      */
     public function handleWebhook(array $payload): void
     {
@@ -84,6 +87,28 @@ class PaymentService
             'order_id' => $result->orderId,
         ]);
 
+        // Confirm the actual status with the gateway straight away. When the check
+        // returns a final status it wins — the idempotency guard in processResult()
+        // then ignores the webhook result below. If the check is inconclusive or
+        // fails, the webhook result is applied instead.
+        if ($result->transactionId) {
+            try {
+                $verified = $this->verify($result->transactionId);
+
+                Log::info('Payment status checked after webhook', [
+                    'transaction_id' => $result->transactionId,
+                    'webhook_status' => $result->status,
+                    'checked_status' => $verified->status,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Payment status check after webhook failed', [
+                    'transaction_id' => $result->transactionId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // No-op if the check above already finalized the payment
         $this->processResult($result);
     }
 
