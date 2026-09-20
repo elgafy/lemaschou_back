@@ -18,6 +18,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 
 class OccasionSpecialItemsResource extends Resource
 {
@@ -91,7 +92,7 @@ class OccasionSpecialItemsResource extends Resource
                         // 'dimensions:min_width=50,min_height=50,max_width=100,max_height=100'
                         // Custom rule for maximum dimensions
                     ])
-                    ->hint('Upload an image with dimensions between 50x50 and 100x100 pixels. Only JPEG, PNG, and WEBP formats are allowed, with a maximum file size of 125 KB. This field is required.')
+                    ->hint('Upload an image with dimensions between 120x120 and 400x400 pixels. Only JPEG, PNG, and WEBP formats are allowed, with a maximum file size of 125 KB. This field is required.')
                 // ->imageResizeMode('cover')
                 // ->imageCropAspectRatio('1:1')
                 // ->imageResizeTargetWidth('100')

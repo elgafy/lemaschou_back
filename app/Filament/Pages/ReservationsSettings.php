@@ -7,6 +7,7 @@ use App\Models\Setting;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -172,8 +173,8 @@ class ReservationsSettings extends Page
                 ]),
                 Fieldset::make('Booking Popup Notice - Drinks and desserts policy ')
                 ->schema([
-                    Textarea::make('booking_notice_en')->label('Notice in English')->required(),
-                    Textarea::make('booking_notice_ar')->label('Notice in Arabic')->required(),
+                    RichEditor::make('booking_notice_en')->label('Notice in English')->required(),
+                    RichEditor::make('booking_notice_ar')->label('Notice in Arabic')->required(),
                 ])->columns([
                     'xs' => 1,
                     'sm' => 2,
