@@ -21,8 +21,9 @@ class Order extends Model
 
     protected static function booted(): void
     {
-        // Notify staff whenever an order becomes paid, whatever caused the change:
-        // gateway webhook, a status verification request, or a manual update.
+        // Whenever an order becomes paid, whatever caused the change (gateway
+        // webhook, a status verification request, or a manual update): notify
+        // staff and confirm the reservation.
         static::updated(function (Order $order) {
             if (! $order->wasChanged('status') || $order->status !== 'paid') {
                 return;
@@ -41,6 +42,21 @@ class Order extends Model
             }
 
             app(ReservationService::class)->sendReservationOrderNotice($reservation, $order);
+
+            // A cancelled reservation is left alone — a late webhook must not resurrect it
+            if ($reservation->status === 'cancelled') {
+                Log::warning('Reservation left cancelled after payment', [
+                    'order_id' => $order->id,
+                    'reservation_id' => $reservation->id,
+                ]);
+
+                return;
+            }
+
+            if ($reservation->status !== 'confirmed') {
+                $reservation->status = 'confirmed';
+                $reservation->save();
+            }
         });
     }
 
