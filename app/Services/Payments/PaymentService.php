@@ -110,7 +110,12 @@ class PaymentService
         }
 
         // No-op if the check above already finalized the payment
-        $this->processResult($result);
+        $payment = $this->processResult($result);
+
+        // Keep every callback we receive, even ones that didn't change the status
+        if ($payment) {
+            $this->recordAttempt($payment, $payload, $result);
+        }
     }
 
     /**
@@ -141,13 +146,16 @@ class PaymentService
 
     /**
      * Apply a PaymentResult to the Payment and Order records.
+     *
+     * Returns the matched payment so callers can record the attempt, or null when
+     * no payment could be matched.
      */
-    private function processResult(PaymentResult $result): void
+    private function processResult(PaymentResult $result): ?Payment
     {
         if (! $result->transactionId) {
             Log::warning('Payment webhook with no transaction ID', ['raw' => $result->rawResponse]);
 
-            return;
+            return null;
         }
 
         // Skip intermediate statuses (Pending, Redirect) — only process final outcomes
@@ -157,7 +165,7 @@ class PaymentService
                 'transaction_id' => $result->transactionId,
             ]);
 
-            return;
+            return null;
         }
 
         $payment = Payment::where('gateway_transaction_id', $result->transactionId)->first();
@@ -179,7 +187,7 @@ class PaymentService
                 'order_id' => $result->orderId,
             ]);
 
-            return;
+            return null;
         }
 
         // Idempotency: an approved payment is only ever changed by a refund
@@ -189,7 +197,7 @@ class PaymentService
                 'webhook_status' => $result->status,
             ]);
 
-            return;
+            return $payment;
         }
 
         // Ignore a repeat of the status we already recorded, but let a retry
@@ -201,7 +209,7 @@ class PaymentService
                 'webhook_status' => $result->status,
             ]);
 
-            return;
+            return $payment;
         }
 
         // Update payment record
@@ -234,5 +242,25 @@ class PaymentService
             'order_id' => $order?->id,
             'order_status' => $order?->status,
         ]);
+
+        return $payment;
+    }
+
+    /**
+     * Append a gateway callback to the payment's attempt history.
+     */
+    private function recordAttempt(Payment $payment, array $payload, PaymentResult $result): void
+    {
+        $history = $payment->payment_history ?? [];
+
+        $history[] = [
+            'recorded_at' => now()->toIso8601String(),
+            'status' => $result->status,
+            'transaction_id' => $result->transactionId,
+            'payload' => $payload,
+        ];
+
+        $payment->payment_history = $history;
+        $payment->save();
     }
 }

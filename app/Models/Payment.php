@@ -17,14 +17,15 @@ class Payment extends Model
         'gateway_session_id',
         'gateway_response',
         'paid_at',
+        'payment_history',
     ];
 
     protected $casts = [
         'gateway_response' => 'array',
+        'payment_history' => 'array',
         'paid_at' => 'datetime',
         'amount' => 'decimal:2',
     ];
-
 
     public function order()
     {
