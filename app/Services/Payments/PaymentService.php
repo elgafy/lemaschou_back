@@ -54,40 +54,22 @@ class PaymentService
     }
 
     /**
-     * Resolve the URL a customer should use to continue paying an unpaid order.
-     *
-     * A pending session is still valid, so its checkout URL is reused. A failed or
-     * declined attempt is dead, so a brand new session is initiated instead.
-     * Returns null when there is nothing to pay or nothing to retry.
+     * Build the URL a customer can use to retry an unfinished payment, from the
+     * gateway session ID of the existing payment. Returns null when there is no
+     * session to resume.
      */
-    public function resolveRetryUrl(Order $order, Reservation $reservation, string $locale = 'en'): ?string
+    public function getRetryPaymentUrl(Order $order): ?string
     {
-        if ((float) $order->total <= 0) {
+        $payment = $order->payments->firstWhere('status', 'pending')
+            ?? $order->payments->sortByDesc('id')->first();
+
+        $sessionId = $payment?->gateway_session_id;
+
+        if (! $sessionId) {
             return null;
         }
 
-        $payment = $order->payments->sortByDesc('id')->first();
-
-        if ($payment?->status === 'pending' && $payment->gateway_session_id) {
-            return $this->gateway->checkoutUrl($payment->gateway_session_id);
-        }
-
-        // Anything else that is final (approved, refunded) has nothing to retry
-        if ($payment && ! in_array($payment->status, ['declined', 'failed'])) {
-            return null;
-        }
-
-        try {
-            return $this->initiate($order, $reservation, $locale)['redirect_url'];
-        } catch (\Throwable $e) {
-            Log::error('Retry payment initiation failed', [
-                'order_id' => $order->id,
-                'reservation_id' => $reservation->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return null;
-        }
+        return $this->gateway->checkoutUrl($sessionId);
     }
 
     /**

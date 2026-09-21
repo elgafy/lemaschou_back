@@ -188,14 +188,9 @@ class ReservationController extends Controller
             'data' => $reservation,
         ];
 
-        // Offer a retry link while the order is still unpaid and the reservation is live.
-        // A failed/declined attempt gets a brand new payment session.
+        // Offer a retry link while the order is still unpaid and the reservation is live
         if ($reservation->order && $reservation->order->status !== 'paid' && $reservation->status !== 'cancelled') {
-            $retryPaymentUrl = app(PaymentService::class)->resolveRetryUrl(
-                $reservation->order,
-                $reservation,
-                $request->input('locale', 'en')
-            );
+            $retryPaymentUrl = app(PaymentService::class)->getRetryPaymentUrl($reservation->order);
 
             if ($retryPaymentUrl) {
                 $response['retryPaymentUrl'] = $retryPaymentUrl;
