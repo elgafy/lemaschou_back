@@ -162,11 +162,14 @@ class PaymentService
 
         $payment = Payment::where('gateway_transaction_id', $result->transactionId)->first();
 
-        // If no payment found by transaction ID, try by order ID
+        // If no payment found by transaction ID, try by order ID. A retry may come
+        // back with a different transaction ID, so fall back to the latest payment
+        // rather than only pending ones.
         if (! $payment && $result->orderId) {
             $order = Order::find((int) $result->orderId);
             if ($order) {
-                $payment = $order->payments()->where('status', 'pending')->first();
+                $payment = $order->payments()->where('status', 'pending')->first()
+                    ?? $order->payments()->latest('id')->first();
             }
         }
 
@@ -179,9 +182,20 @@ class PaymentService
             return;
         }
 
-        // Idempotency: never downgrade a finalized payment
-        if (in_array($payment->status, ['approved', 'declined']) && ! $result->isRefund()) {
-            Log::info('Webhook ignored — payment already finalized', [
+        // Idempotency: an approved payment is only ever changed by a refund
+        if (! $result->isRefund() && $payment->status === 'approved') {
+            Log::info('Webhook ignored — payment already approved', [
+                'payment_id' => $payment->id,
+                'webhook_status' => $result->status,
+            ]);
+
+            return;
+        }
+
+        // Ignore a repeat of the status we already recorded, but let a retry
+        // succeed after an earlier decline (declined -> approved)
+        if (! $result->isRefund() && $payment->status === $result->status) {
+            Log::info('Webhook ignored — payment status unchanged', [
                 'payment_id' => $payment->id,
                 'current_status' => $payment->status,
                 'webhook_status' => $result->status,
