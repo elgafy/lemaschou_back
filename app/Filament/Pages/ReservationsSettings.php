@@ -189,8 +189,8 @@ class ReservationsSettings extends Page
                 ]),
                 Fieldset::make('Special Occaasion Items Payment Notice')
                 ->schema([
-                    Textarea::make('occasion_items_notice_en')->label('Notice in English')->required()->rows(5),
-                    Textarea::make('occasion_items_notice_ar')->label('Notice in Arabic')->required()->rows(5),
+                    RichEditor::make('occasion_items_notice_en')->label('Notice in English')->required(),
+                    RichEditor::make('occasion_items_notice_ar')->label('Notice in Arabic')->required(),
                 ])->columns([
                     'xs' => 1,
                     'sm' => 2,

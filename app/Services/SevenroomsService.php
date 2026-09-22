@@ -153,7 +153,7 @@ class SevenroomsService
             ], 200);
         }
         $this->output->writeln("Sevenrooms Booking Request for Reservation: " . $reservation);
-        Log::alert("Sevenrooms Booking Request for Reservation: " . json_encode($reservation));
+        Log::info("Sevenrooms Booking Request for Reservation: " . json_encode($reservation));
         $tags = "";
         // Add occasion food allergies to tags
         if ($reservation['food_allergies']) {
@@ -200,7 +200,7 @@ class SevenroomsService
                 'phone' => $reservation->mobile,
                 'email' => $reservation->email,
                 'external_user_id' => $user->id,
-                'external_id' => $reservation->id,
+                'external_id' => $reservation->reservation_id,
                 // 'prepayment_total' => isset($order_total) ? $order_total : 0,
                 'tags' => $tags,
                 'notes' => $notes,
@@ -219,7 +219,7 @@ class SevenroomsService
         if ($response["status"] == 200) {
             $reservation->sevenrooms_reservation_id = $response['data']['reservation_reference_code'];
             $reservation->save();
-            Log::alert("Sevenrooms Booking Created successfully for Reservation: " . json_encode($reservation) . " with Sevenrooms Reservation ID: " . $reservation->sevenrooms_reservation_id);
+            Log::info("Sevenrooms Booking Created successfully for Reservation: " . json_encode($reservation) . " with Sevenrooms Reservation ID: " . $reservation->sevenrooms_reservation_id);
             return response()->json([
                 'success' => true,
                 'data' => $response['data'],
