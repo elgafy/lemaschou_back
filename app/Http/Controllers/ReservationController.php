@@ -149,19 +149,22 @@ class ReservationController extends Controller
             ], 404);
         }
 
-        // Fail-safe: if order has pending payment, verify with Edfapay directly
+        // Fail-safe: while the order is unpaid, confirm the status with Edfapay
+        // directly. This also covers retries — after a decline there is no pending
+        // payment left, so the customer would otherwise see a stale "failed" until
+        // the webhook happens to land.
         if ($reservation->order) {
-            $pendingPayment = $reservation->order->payments
-                ->where('status', 'pending')
-                ->first();
-
-            if ($pendingPayment) {
+            if ($reservation->order->status !== 'paid' && $reservation->status !== 'cancelled') {
                 try {
                     $paymentService = app(PaymentService::class);
 
-                    if ($pendingPayment->gateway_transaction_id) {
+                    $payments = $reservation->order->payments->sortByDesc('id');
+                    $payment = $payments->first(fn ($p) => filled($p->gateway_transaction_id))
+                        ?? $payments->first();
+
+                    if ($payment?->gateway_transaction_id) {
                         // We have a transaction ID — use the direct details endpoint
-                        $paymentService->verify($pendingPayment->gateway_transaction_id);
+                        $paymentService->verify($payment->gateway_transaction_id);
                     } else {
                         // No transaction ID — search Edfapay by order ID
                         $paymentService->verifyByOrderId((string) $reservation->order->id);

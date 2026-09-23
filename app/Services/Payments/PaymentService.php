@@ -75,8 +75,9 @@ class PaymentService
     /**
      * Handle an incoming webhook from the payment gateway.
      *
-     * The webhook payload is not trusted on its own: the real status is confirmed
-     * with the gateway immediately, and that check takes precedence.
+     * The webhook result is applied first so the status lands as fast as possible
+     * (the customer is redirected back before the webhook is even processed), then
+     * confirmed with the gateway, which can still correct it.
      */
     public function handleWebhook(array $payload): void
     {
@@ -88,10 +89,12 @@ class PaymentService
             'order_id' => $result->orderId,
         ]);
 
-        // Confirm the actual status with the gateway straight away. When the check
-        // returns a final status it wins — the idempotency guard in processResult()
-        // then ignores the webhook result below. If the check is inconclusive or
-        // fails, the webhook result is applied instead.
+        // Apply what the webhook told us straight away
+        $payment = $this->processResult($result);
+
+        // Then confirm the real status with the gateway. It can still correct an
+        // earlier decline (declined -> approved), but it cannot undo an approval —
+        // only a refund can do that.
         if ($result->transactionId) {
             try {
                 $verified = $this->verify($result->transactionId);
@@ -109,8 +112,9 @@ class PaymentService
             }
         }
 
-        // No-op if the check above already finalized the payment
-        $payment = $this->processResult($result);
+        // An intermediate webhook (pending) returns no payment above, so resolve it
+        // here to keep the callback in the history
+        $payment ??= $this->resolvePayment($result);
 
         // Keep every callback we receive, even ones that didn't change the status
         if ($payment) {
@@ -145,6 +149,27 @@ class PaymentService
     }
 
     /**
+     * Find the payment a gateway result belongs to.
+     */
+    private function resolvePayment(PaymentResult $result): ?Payment
+    {
+        $payment = Payment::where('gateway_transaction_id', $result->transactionId)->first();
+
+        // If no payment found by transaction ID, try by order ID. A retry may come
+        // back with a different transaction ID, so fall back to the latest payment
+        // rather than only pending ones.
+        if (! $payment && $result->orderId) {
+            $order = Order::find((int) $result->orderId);
+            if ($order) {
+                $payment = $order->payments()->where('status', 'pending')->first()
+                    ?? $order->payments()->latest('id')->first();
+            }
+        }
+
+        return $payment;
+    }
+
+    /**
      * Apply a PaymentResult to the Payment and Order records.
      *
      * Returns the matched payment so callers can record the attempt, or null when
@@ -168,18 +193,7 @@ class PaymentService
             return null;
         }
 
-        $payment = Payment::where('gateway_transaction_id', $result->transactionId)->first();
-
-        // If no payment found by transaction ID, try by order ID. A retry may come
-        // back with a different transaction ID, so fall back to the latest payment
-        // rather than only pending ones.
-        if (! $payment && $result->orderId) {
-            $order = Order::find((int) $result->orderId);
-            if ($order) {
-                $payment = $order->payments()->where('status', 'pending')->first()
-                    ?? $order->payments()->latest('id')->first();
-            }
-        }
+        $payment = $this->resolvePayment($result);
 
         if (! $payment) {
             Log::warning('Payment not found for webhook', [
