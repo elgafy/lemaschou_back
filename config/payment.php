@@ -45,10 +45,10 @@ return [
     */
     'success_url' => env(
         'PAYMENT_SUCCESS_URL',
-        $frontendUrl.'/{locale}/reservation/{reservation_id}/confirmation'
+        $frontendUrl.'/{locale}/reservation/{reservation_id}'
     ),
     'failure_url' => env(
         'PAYMENT_FAILURE_URL',
-        $frontendUrl.'/{locale}/reservation/{reservation_id}/payment-failed'
+        $frontendUrl.'/{locale}/reservation/{reservation_id}'
     ),
 ];
