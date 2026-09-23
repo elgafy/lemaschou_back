@@ -182,7 +182,10 @@ class ReservationService
                 $item = OccasionSpecialItems::findOrFail($selected['itemId']);
                 $variationValue = $selected['variationValue'] ?? null;
                 $itemPrice = $item->price;
-                $itemName = $item->name_en;
+                $itemNameEn = $item->name_en;
+                $itemNameAr = $item->name_ar;
+                $variationEn = $variationValue;
+                $variationAr = null;
 
                 // If item has variations and a variation was selected, use variation price and name
                 if ($item->has_variations && $variationValue && is_array($item->variations)) {
@@ -193,7 +196,10 @@ class ReservationService
                         foreach ($variation['values'] as $value) {
                             if (($value['value_en'] ?? '') === $variationValue) {
                                 $itemPrice = (float) ($value['price'] ?? $item->price);
-                                $itemName = $item->name_en.' - '.$variationValue;
+                                $variationEn = $value['value_en'] ?? $variationValue;
+                                $variationAr = $value['value_ar'] ?? null;
+                                $itemNameEn = $item->name_en.' - '.$variationEn;
+                                $itemNameAr = $item->name_ar.' - '.($variationAr ?? $variationEn);
                                 break 2;
                             }
                         }
@@ -203,9 +209,13 @@ class ReservationService
                 $items[] = [
                     'model' => $item,
                     'price' => $itemPrice,
-                    'name' => $itemName,
+                    'name' => $itemNameEn,
+                    'name_en' => $itemNameEn,
+                    'name_ar' => $itemNameAr,
                     'quantity' => (int) ($selected['quantity'] ?? 1),
-                    'variation' => $variationValue,
+                    'variation' => $variationEn,
+                    'variation_en' => $variationEn,
+                    'variation_ar' => $variationAr,
                     'category' => $item->category ? OccasionSpecialItemsCategory::find($item->category)?->name_en : null,
                 ];
             }
@@ -241,6 +251,8 @@ class ReservationService
                 $item = $entry['model'];
                 $itemPrice = $entry['price'];
                 $itemName = $entry['name'];
+                $itemNameEn = $entry['name_en'] ?? $itemName;
+                $itemNameAr = $entry['name_ar'] ?? $itemName;
                 $itemQuantity = $entry['quantity'];
                 $itemSubTotal = $itemPrice * $itemQuantity;
                 $vat = 0;
@@ -252,7 +264,11 @@ class ReservationService
                     'itemable_id' => $item->id,
                     'itemable_type' => OccasionSpecialItems::class,
                     'name' => $itemName,
+                    'name_en' => $itemNameEn,
+                    'name_ar' => $itemNameAr,
                     'variation' => $entry['variation'] ?? null,
+                    'variation_en' => $entry['variation_en'] ?? $entry['variation'] ?? null,
+                    'variation_ar' => $entry['variation_ar'] ?? null,
                     'category' => $entry['category'] ?? null,
                     'quantity' => $itemQuantity,
                     'unit_price' => $itemPrice,
@@ -302,6 +318,8 @@ class ReservationService
                     'itemable_id' => $special_day->id,
                     'itemable_type' => SpecialDays::class,
                     'name' => $special_day->name_en ?? 'Special Day Deposit',
+                    'name_en' => $special_day->name_en ?? 'Special Day Deposit',
+                    'name_ar' => $special_day->name_ar ?? $special_day->name_en ?? 'Special Day Deposit',
                     'quantity' => 1,
                     'unit_price' => $deposite_price,
                     'sub_total' => $deposite_price,
@@ -319,6 +337,7 @@ class ReservationService
             $giftCard = GiftCard::findOrFail($validated['giftCard']);
             $cardContent = $validated['cardContent'] ?? '';
             $itemName = $giftCard->title_en.' - Content: '.$cardContent;
+            $itemNameAr = $giftCard->title_ar.' - المحتوى: '.$cardContent;
 
             if (! $order) {
                 $order = Order::create([
@@ -338,6 +357,8 @@ class ReservationService
                 'itemable_id' => $giftCard->id,
                 'itemable_type' => GiftCard::class,
                 'name' => $itemName,
+                'name_en' => $itemName,
+                'name_ar' => $itemNameAr,
                 'quantity' => 1,
                 'unit_price' => 0,
                 'sub_total' => 0,
