@@ -10,6 +10,7 @@ use App\Models\Asset;
 use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SettingsController extends Controller
 {
@@ -77,6 +78,7 @@ class SettingsController extends Controller
             'use_reservation_external_link',
             'reservation_link',
             'sevenrooms_venue_id',
+            'enable_recaptcha',
             'enable_occasions',
             'enable_occasion_items',
             'minimum_occasion_items_purchase_amount',

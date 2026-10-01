@@ -36,6 +36,7 @@ class ReservationService
             'use_reservation_external_link',
             'reservation_link',
             'force_reservation_downpayment',
+            'enable_recaptcha',
             'downpayment_amount',
             'seating_time_en',
             'seating_time_ar',
@@ -377,6 +378,15 @@ class ReservationService
         if ($reservation->order) {
             Log::alert('Created reservation order with data: '.json_encode($reservation->order).' and items: '.json_encode($reservation->order->items));
         }
+
+        // Nothing to pay for, so there is nothing to wait for — confirm straight away.
+        // Anything with an amount due stays pending until the payment succeeds
+        // (see the paid transition on the Order model).
+        if (! $order || (float) $order->total <= 0) {
+            $reservation->status = 'confirmed';
+            $reservation->save();
+        }
+
         $reservation->refresh();
 
         return ['reservation' => $reservation, 'user' => $user, 'token' => $token, 'order' => $order ?? null];

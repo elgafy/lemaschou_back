@@ -2,65 +2,99 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Pages\Page;
 use App\Models\Setting;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
+use Filament\Pages\Page;
 
 class ReservationsSettings extends Page
 {
     use HasPageShield;
+
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+
     protected static ?string $navigationLabel = 'Reservation Settings';
+
     protected static ?int $navigationSort = 10;
+
     protected static ?string $navigationGroup = 'Reservations Management';
 
     protected static string $view = 'filament.pages.reservations-settings';
 
     public ?string $use_reservation_external_link = '';
+
     public ?string $reservation_link = '';
+
     public ?string $force_reservation_downpayment = '';
+
     public ?string $downpayment_amount = '';
+
     public ?string $enable_sevenrooms_reservation = '';
+
     public ?string $booking_time_window = '';
+
     public ?int $booking_min_guests = 2;
+
     public ?int $booking_max_guests = 12;
+
     public ?string $sevenrooms_venue_id = '';
+
     public ?string $enable_occasions = '';
+
     public ?string $enable_occasion_items = '';
+
     public ?string $enable_occasion_items_payment = '';
+
+    public ?string $enable_recaptcha = '';
+
     public ?string $minimum_occasion_items_purchase_amount = '100';
+
     public ?string $add_calculated_vat = '';
+
     public ?string $vat_value = '';
+
     public ?string $enable_booking_notice = '';
+
     public ?string $booking_intro_en = '';
+
     public ?string $booking_intro_ar = '';
+
     public ?string $booking_notice_en = '';
+
     public ?string $booking_notice_ar = '';
+
     public ?string $occasion_items_title_en = '';
+
     public ?string $occasion_items_title_ar = '';
+
     public ?string $occasion_items_notice_en = '';
+
     public ?string $occasion_items_notice_ar = '';
+
     public ?string $minimum_occasion_items_purchase_amount_error_message_en = '';
+
     public ?string $minimum_occasion_items_purchase_amount_error_message_ar = '';
+
     public ?array $occasions = [];
+
     public ?array $allergies = [];
+
     public ?string $enable_personnel_booking_email_notification = '';
+
     public ?string $enable_guest_booking_email_notification = '';
+
     public ?array $reservation_notice_emails = [];
 
-
-    public function mount(): void {
+    public function mount(): void
+    {
         $this->use_reservation_external_link = Setting::where('key', 'use_reservation_external_link')->first()?->value ?? '';
         $this->reservation_link = Setting::where('key', 'reservation_link')->first()?->value ?? '';
         $this->enable_sevenrooms_reservation = Setting::where('key', 'enable_sevenrooms_reservation')->first()?->value ?? '';
@@ -73,6 +107,7 @@ class ReservationsSettings extends Page
         $this->enable_occasions = Setting::where('key', 'enable_occasions')->first()?->value ?? '';
         $this->enable_occasion_items = Setting::where('key', 'enable_occasion_items')->first()?->value ?? '';
         $this->enable_occasion_items_payment = Setting::where('key', 'enable_occasion_items_payment')->first()?->value ?? '';
+        $this->enable_recaptcha = Setting::where('key', 'enable_recaptcha')->first()?->value ?? '';
         $this->minimum_occasion_items_purchase_amount = Setting::where('key', 'minimum_occasion_items_purchase_amount')->first()?->value ?? '100';
         $this->add_calculated_vat = Setting::where('key', 'add_calculated_vat')->first()?->value ?? false;
         $this->vat_value = Setting::where('key', 'vat_value')->first()?->value ?? false;
@@ -93,19 +128,21 @@ class ReservationsSettings extends Page
         $this->enable_guest_booking_email_notification = Setting::where('key', 'enable_guest_booking_email_notification')->first()?->value ?? '';
         $this->reservation_notice_emails = json_decode(Setting::where('key', 'reservation_notice_emails')->first()?->value, true) ?? [];
     }
-    protected function getFormSchema(): array {
+
+    protected function getFormSchema(): array
+    {
         return [
             Toggle::make('use_reservation_external_link')
-            ->label('Use external link for reservation')
-            ->helperText('Use an external link for reservation instead of the website booking system.')
-            ->live(),
+                ->label('Use external link for reservation')
+                ->helperText('Use an external link for reservation instead of the website booking system.')
+                ->live(),
             TextInput::make('reservation_link')->label('Reservation Link')->activeUrl()->required()->maxLength(255)->hidden(fn (Get $get): bool => ! $get('use_reservation_external_link')),
             Toggle::make('enable_sevenrooms_reservation')->label('Enable sevenrooms booking (disable for testing)'),
             TextInput::make('sevenrooms_venue_id')
-            ->label('Sevenrooms venue ID')
-            ->helperText('Sevenrooms venue ID which will be used for reservations, this field is mandatory for reservations to be accessible in Sevenrooms.')
-            ->required()
-            ->maxLength(255),
+                ->label('Sevenrooms venue ID')
+                ->helperText('Sevenrooms venue ID which will be used for reservations, this field is mandatory for reservations to be accessible in Sevenrooms.')
+                ->required()
+                ->maxLength(255),
             TextInput::make('booking_time_window')->label('Booking Time Window')->numeric()->integer()->minValue(1)->required()->helperText('Initial booking reservation will be holded for this period (in minutes) before being automatically released if not confirmed.'),
             Fieldset::make('Guests Count Limits')
                 ->schema([
@@ -116,116 +153,120 @@ class ReservationsSettings extends Page
                     'sm' => 2,
                 ]),
             Toggle::make('enable_booking_notice')->label('Enable Booking Notice Popup')
-            ->helperText('Enable popup to inform customers with drinks and desserts policy.'),
+                ->helperText('Enable popup to inform customers with drinks and desserts policy.'),
             Toggle::make('enable_occasions')->label('Enable Special Occassions')
-            ->helperText('Enable occasions selection, like Wedding, Business, Date Night etc.'),
+                ->helperText('Enable occasions selection, like Wedding, Business, Date Night etc.'),
             Toggle::make('enable_occasion_items')->label('Enable Special Occassion Items')
-            ->helperText('Enable occasion special items to be purchased, like Flowers, Cakes etc.'),
+                ->helperText('Enable occasion special items to be purchased, like Flowers, Cakes etc.'),
             Toggle::make('enable_occasion_items_payment')->label('Enable Payment for Special Occassion Items')
-            ->helperText('Enable payment for occasion special items reservation.'),
+                ->helperText('Enable payment for occasion special items reservation.'),
+            Toggle::make('enable_recaptcha')->label('Enable Recaptcha in Reservation Page')
+                ->helperText('Show a recaptcha challenge on the reservation page.'),
             TextInput::make('minimum_occasion_items_purchase_amount')
-            ->label('Minimum Occasion Items Purchase Amount')
-            ->helperText('The minimum amount to include special occasion items in reservation, bellow this amount user can not reserve special occasion items')
-            ->numeric()
-            ->default(100)
-            ->required(),
+                ->label('Minimum Occasion Items Purchase Amount')
+                ->helperText('The minimum amount to include special occasion items in reservation, bellow this amount user can not reserve special occasion items')
+                ->numeric()
+                ->default(100)
+                ->required(),
             Toggle::make('add_calculated_vat')->label('Add Calculated VAT')
-            ->helperText('Add calculated VAT to the total price.')->live(),
+                ->helperText('Add calculated VAT to the total price.')->live(),
             TextInput::make('vat_value')->label('VAT Value')->required()->numeric()->hidden(fn (Get $get): bool => ! $get('add_calculated_vat')),
             Section::make('Occasions')
-            ->schema([
-                Repeater::make('occasions')
                 ->schema([
-                    TextInput::make('key')->required(),
-                    TextInput::make('name_en')->required(),
-                    TextInput::make('name_ar')->required(),
+                    Repeater::make('occasions')
+                        ->schema([
+                            TextInput::make('key')->required(),
+                            TextInput::make('name_en')->required(),
+                            TextInput::make('name_ar')->required(),
+                        ])
+                        ->columns(3)
+                        ->collapsible(),
                 ])
-                ->columns(3)
-                ->collapsible()
-            ])
-            ->collapsed(),
+                ->collapsed(),
             Section::make('Food Allergies')
-            ->schema([
-                Repeater::make('allergies')
                 ->schema([
-                    TextInput::make('key')->required(),
-                    TextInput::make('name_en')->required(),
-                    TextInput::make('name_ar')->required(),
+                    Repeater::make('allergies')
+                        ->schema([
+                            TextInput::make('key')->required(),
+                            TextInput::make('name_en')->required(),
+                            TextInput::make('name_ar')->required(),
+                        ])
+                        ->columns(3)
+                        ->collapsible(),
                 ])
-                ->columns(3)
-                ->collapsible()
-            ])
-            ->collapsed(),
+                ->collapsed(),
             Section::make('Copywrite')
-            ->columns([
-                'xs' => 1,
-                'sm' => 2,
-                'xl' => 3,
-            ])
-            ->schema([
-                Fieldset::make('Booking Widget Introduction Text - what displayed to customers before the booking form')
-                ->schema([
-                    Textarea::make('booking_intro_en')->label('Booking widget intro in English'),
-                    Textarea::make('booking_intro_ar')->label('Booking widget intro in Arabic'),
-                ])->columns([
+                ->columns([
                     'xs' => 1,
                     'sm' => 2,
-                ]),
-                Fieldset::make('Booking Popup Notice - Drinks and desserts policy ')
-                ->schema([
-                    RichEditor::make('booking_notice_en')->label('Notice in English')->required(),
-                    RichEditor::make('booking_notice_ar')->label('Notice in Arabic')->required(),
-                ])->columns([
-                    'xs' => 1,
-                    'sm' => 2,
-                ]),
-                Fieldset::make('Special Occaasion Items Title')
-                ->schema([
-                    TextInput::make('occasion_items_title_en')->label('Title in English')->required(),
-                    TextInput::make('occasion_items_title_ar')->label('Title in Arabic')->required(),
-                ])->columns([
-                    'xs' => 1,
-                    'sm' => 2,
-                ]),
-                Fieldset::make('Special Occaasion Items Payment Notice')
-                ->schema([
-                    RichEditor::make('occasion_items_notice_en')->label('Notice in English')->required(),
-                    RichEditor::make('occasion_items_notice_ar')->label('Notice in Arabic')->required(),
-                ])->columns([
-                    'xs' => 1,
-                    'sm' => 2,
-                ]),
-                Fieldset::make('Minimum Occasion Special Item Error Message')
-                ->schema([
-                    Textarea::make('minimum_occasion_items_purchase_amount_error_message_en')->label('Error Message in English')->required()->rows(5),
-                    Textarea::make('minimum_occasion_items_purchase_amount_error_message_ar')->label('Error Message in Arabic')->required()->rows(5),
-                ])->columns([
-                    'xs' => 1,
-                    'sm' => 2,
-                ]),
-            ])
-            ->collapsed(),
-            Section::make('Email Notifications Settings')
-            ->schema([
-                Toggle::make('enable_guest_booking_email_notification')->label('Enable Booking Email Notification for Guests')
-                ->helperText('Send email notification to guests email after booking is made or updated.'),
-                Toggle::make('enable_personnel_booking_email_notification')->label('Enable Reservation\'s Special Items Email Notification for Personnel')
-                ->helperText('Send email notification to specified emails when a new reservation is made with special occasion items.')
-                ->live(),
-                Repeater::make('reservation_notice_emails')
-                ->label('Personnel to receive reservation notice emails')
-                ->schema([
-                    TextInput::make('name')->required(),
-                    TextInput::make('email')->required(),
+                    'xl' => 3,
                 ])
-                ->columns(2)
-                ->collapsible()
-                ->hidden(fn (Get $get): bool => ! $get('enable_personnel_booking_email_notification'))
-            ])
-            ->collapsed(),
+                ->schema([
+                    Fieldset::make('Booking Widget Introduction Text - what displayed to customers before the booking form')
+                        ->schema([
+                            Textarea::make('booking_intro_en')->label('Booking widget intro in English'),
+                            Textarea::make('booking_intro_ar')->label('Booking widget intro in Arabic'),
+                        ])->columns([
+                            'xs' => 1,
+                            'sm' => 2,
+                        ]),
+                    Fieldset::make('Booking Popup Notice - Drinks and desserts policy ')
+                        ->schema([
+                            RichEditor::make('booking_notice_en')->label('Notice in English')->required(),
+                            RichEditor::make('booking_notice_ar')->label('Notice in Arabic')->required(),
+                        ])->columns([
+                            'xs' => 1,
+                            'sm' => 2,
+                        ]),
+                    Fieldset::make('Special Occaasion Items Title')
+                        ->schema([
+                            TextInput::make('occasion_items_title_en')->label('Title in English')->required(),
+                            TextInput::make('occasion_items_title_ar')->label('Title in Arabic')->required(),
+                        ])->columns([
+                            'xs' => 1,
+                            'sm' => 2,
+                        ]),
+                    Fieldset::make('Special Occaasion Items Payment Notice')
+                        ->schema([
+                            RichEditor::make('occasion_items_notice_en')->label('Notice in English')->required(),
+                            RichEditor::make('occasion_items_notice_ar')->label('Notice in Arabic')->required(),
+                        ])->columns([
+                            'xs' => 1,
+                            'sm' => 2,
+                        ]),
+                    Fieldset::make('Minimum Occasion Special Item Error Message')
+                        ->schema([
+                            Textarea::make('minimum_occasion_items_purchase_amount_error_message_en')->label('Error Message in English')->required()->rows(5),
+                            Textarea::make('minimum_occasion_items_purchase_amount_error_message_ar')->label('Error Message in Arabic')->required()->rows(5),
+                        ])->columns([
+                            'xs' => 1,
+                            'sm' => 2,
+                        ]),
+                ])
+                ->collapsed(),
+            Section::make('Email Notifications Settings')
+                ->schema([
+                    Toggle::make('enable_guest_booking_email_notification')->label('Enable Booking Email Notification for Guests')
+                        ->helperText('Send email notification to guests email after booking is made or updated.'),
+                    Toggle::make('enable_personnel_booking_email_notification')->label('Enable Reservation\'s Special Items Email Notification for Personnel')
+                        ->helperText('Send email notification to specified emails when a new reservation is made with special occasion items.')
+                        ->live(),
+                    Repeater::make('reservation_notice_emails')
+                        ->label('Personnel to receive reservation notice emails')
+                        ->schema([
+                            TextInput::make('name')->required(),
+                            TextInput::make('email')->required(),
+                        ])
+                        ->columns(2)
+                        ->collapsible()
+                        ->hidden(fn (Get $get): bool => ! $get('enable_personnel_booking_email_notification')),
+                ])
+                ->collapsed(),
         ];
     }
-    public function submit(): void {
+
+    public function submit(): void
+    {
         Setting::updateOrCreate(['key' => 'use_reservation_external_link'], ['value' => $this->use_reservation_external_link]);
         Setting::updateOrCreate(['key' => 'reservation_link'], ['value' => $this->reservation_link]);
         Setting::updateOrCreate(['key' => 'force_reservation_downpayment'], ['value' => $this->force_reservation_downpayment]);
@@ -239,6 +280,7 @@ class ReservationsSettings extends Page
         Setting::updateOrCreate(['key' => 'enable_occasions'], ['value' => $this->enable_occasions]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items'], ['value' => $this->enable_occasion_items]);
         Setting::updateOrCreate(['key' => 'enable_occasion_items_payment'], ['value' => $this->enable_occasion_items_payment]);
+        Setting::updateOrCreate(['key' => 'enable_recaptcha'], ['value' => $this->enable_recaptcha]);
         Setting::updateOrCreate(['key' => 'minimum_occasion_items_purchase_amount'], ['value' => $this->minimum_occasion_items_purchase_amount]);
         Setting::updateOrCreate(['key' => 'add_calculated_vat'], ['value' => $this->add_calculated_vat]);
         Setting::updateOrCreate(['key' => 'vat_value'], ['value' => $this->vat_value]);
@@ -263,5 +305,4 @@ class ReservationsSettings extends Page
             ->success()
             ->send();
     }
-
 }
