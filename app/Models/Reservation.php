@@ -29,7 +29,6 @@ class Reservation extends Model
         return $hash;
     }
 
-
     protected $fillable = [
         'status',
         'date',
@@ -60,5 +59,20 @@ class Reservation extends Model
     public function order()
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Whether this reservation includes occasion special items, either from
+     * the snapshot taken at booking or from its order line items.
+     */
+    public function hasOccasionItems(): bool
+    {
+        if (! empty($this->occasion_items)) {
+            return true;
+        }
+
+        return (bool) $this->order?->items()
+            ->where('itemable_type', OccasionSpecialItems::class)
+            ->exists();
     }
 }

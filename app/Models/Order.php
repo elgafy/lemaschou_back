@@ -22,8 +22,8 @@ class Order extends Model
     protected static function booted(): void
     {
         // Whenever an order becomes paid, whatever caused the change (gateway
-        // webhook, a status verification request, or a manual update): notify
-        // staff and confirm the reservation.
+        // webhook, a status verification request, or a manual update): confirm
+        // the reservation, make the deferred Sevenrooms booking, then notify staff.
         static::updated(function (Order $order) {
             if (! $order->wasChanged('status') || $order->status !== 'paid') {
                 return;
@@ -41,8 +41,6 @@ class Order extends Model
                 return;
             }
 
-            app(ReservationService::class)->sendReservationOrderNotice($reservation, $order);
-
             // A cancelled reservation is left alone — a late webhook must not resurrect it
             if ($reservation->status === 'cancelled') {
                 Log::warning('Reservation left cancelled after payment', [
@@ -57,6 +55,22 @@ class Order extends Model
                 $reservation->status = 'confirmed';
                 $reservation->save();
             }
+
+            // Occasion-item reservations are only booked in Sevenrooms once paid.
+            // Staff notice waits until the booking exists (or wasn't deferred).
+            $bookingFailed = $reservation->hasOccasionItems()
+                && ! app(ReservationService::class)->bookDeferredSevenrooms($reservation);
+
+            if ($bookingFailed) {
+                Log::error('Sevenrooms booking failed after payment — staff notice skipped', [
+                    'order_id' => $order->id,
+                    'reservation_id' => $reservation->id,
+                ]);
+
+                return;
+            }
+
+            app(ReservationService::class)->sendReservationOrderNotice($reservation, $order);
         });
     }
 

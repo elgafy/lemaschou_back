@@ -94,8 +94,17 @@ class ReservationController extends Controller
         $token = $result['token'];
         $order = $result['order'];
 
-        // Create the reservation in Sevenrooms system
-        $this->sevenroomsService->sevenroomsBook($reservation, $user);
+        // Create the reservation in Sevenrooms system.
+        // When occasion items are ordered with an amount due, the booking is
+        // deferred until payment success (see the paid transition on Order).
+        if ($order && (float) $order->total > 0 && $reservation->hasOccasionItems()) {
+            Log::info('Sevenrooms booking deferred until payment success', [
+                'reservation_id' => $reservation->id,
+                'order_id' => $order->id,
+            ]);
+        } else {
+            $this->sevenroomsService->sevenroomsBook($reservation, $user);
+        }
 
         // Build response data
         if ($order) {

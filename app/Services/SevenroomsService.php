@@ -200,10 +200,10 @@ class SevenroomsService
             $order = Order::find($reservation['order_id']);
             $order_total = $order->total;
             $notes .= 'Payment Total Amount: '.$order_total." SAR. \n";
-            if ($order->payment_status == 'pending') {
+            if ($order->status == 'pending') {
                 $tags .= 'Payments:Processing,';
             }
-            if ($order->payment_status == 'completed') {
+            if ($order->status == 'paid') {
                 $tags .= 'Payments:Payed,';
             }
         }

@@ -433,6 +433,54 @@ class ReservationService
         });
     }
 
+    // Make the Sevenrooms booking for a reservation that was deferred until
+    // payment success. Returns true when the booking exists afterwards.
+    public function bookDeferredSevenrooms(Reservation $reservation): bool
+    {
+        // Already booked — nothing to do
+        if (filled($reservation->sevenrooms_reservation_id)) {
+            return true;
+        }
+
+        $user = User::where('email', $reservation->email)->first();
+        if (! $user) {
+            Log::error('Deferred Sevenrooms booking failed — user not found', [
+                'reservation_id' => $reservation->id,
+                'email' => $reservation->email,
+            ]);
+
+            return false;
+        }
+
+        try {
+            $response = app(SevenroomsService::class)->sevenroomsBook($reservation, $user);
+            $data = $response->getData(true);
+        } catch (\Throwable $e) {
+            Log::error('Deferred Sevenrooms booking failed', [
+                'reservation_id' => $reservation->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        if (! ($data['success'] ?? false)) {
+            Log::error('Deferred Sevenrooms booking failed', [
+                'reservation_id' => $reservation->id,
+                'response' => $data,
+            ]);
+
+            return false;
+        }
+
+        Log::info('Deferred Sevenrooms booking completed after payment', [
+            'reservation_id' => $reservation->id,
+            'sevenrooms_reservation_id' => $reservation->sevenrooms_reservation_id,
+        ]);
+
+        return true;
+    }
+
     // Send reservation order notice email to staff.
     // Triggered by the Order model whenever its status changes to 'paid'.
     public function sendReservationOrderNotice(Reservation $reservation, Order $order): void
