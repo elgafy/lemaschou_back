@@ -1,17 +1,14 @@
 <?php
 
-use App\Http\Middleware\CheckLicence;
-use App\Http\Middleware\VerifyIsAdmin;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
-use Illuminate\Auth\AuthenticationException;
+use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Http\Exceptions\ThrottleRequestsException;
-use Illuminate\Routing\Route;
-use Illuminate\Support\Facades\Artisan;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,23 +18,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-       $middleware->append([CheckLicence::class]);
+        //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (Throwable $e,Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*')) {
-            if ($e instanceof AuthenticationException) {
-                return response()->res(failed(), 'Session_Expired',[],404);
+                if ($e instanceof AuthenticationException) {
+                    return response()->res(failed(), 'Session_Expired', [], 404);
+                }
+                if ($e instanceof MethodNotAllowedHttpException) {
+                    return response()->res(failed(), 'method', [], 405);
+                }
+                if ($e instanceof NotFoundHttpException) {
+                    return response()->res(failed(), 'url', [], 404);
+                }
+                if ($e instanceof ThrottleRequestsException) {
+                    Artisan::call('cache:clear');
+                }
             }
-            if ($e instanceof MethodNotAllowedHttpException) {
-                return response()->res(failed(), 'method',[],405);
-            }
-            if ($e instanceof NotFoundHttpException) {
-                return response()->res(failed(), 'url',[],404);
-            }
-            if ($e instanceof ThrottleRequestsException) {
-                Artisan::call('cache:clear');
-            }
-        }
         });
     })->create();
