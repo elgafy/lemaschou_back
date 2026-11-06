@@ -200,16 +200,18 @@ class SevenroomsService
             $order = Order::find($reservation['order_id']);
             if ($order->items()->exists()) {
                 $orderItems = $order->items()->get();
-                $itemNames = $orderItems->map(fn ($item) => ($item->name_en ?? $item->name).' x'.$item->quantity)->implode(', ');
+                $itemNames = $orderItems->map(fn ($item) => ($item->name_en ?? $item->name).' x'.$item->quantity)->implode("\n");
                 $notes .= 'Special Occasion Items: '.$itemNames."\n";
             }
             $order_total = $order->total;
             $notes .= 'Payment Total Amount: '.$order_total." SAR. \n";
             if ($order->status == 'pending') {
-                $tags .= 'Payments:Processing,';
+                $tags .= 'Payments:Processing Payment,';
+                $notes .= 'Payment Status: Pending. \n';
             }
             if ($order->status == 'paid') {
-                $tags .= 'Payments:Payed,';
+                $tags .= 'Payments:Paid,';
+                $notes .= 'Payment Status: Paid. \n';
             }
         }
 
