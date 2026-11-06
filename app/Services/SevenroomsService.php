@@ -201,17 +201,17 @@ class SevenroomsService
             if ($order->items()->exists()) {
                 $orderItems = $order->items()->get();
                 $itemNames = $orderItems->map(fn ($item) => ($item->name_en ?? $item->name).' x'.$item->quantity)->implode("\n");
-                $notes .= 'Special Occasion Items: '.$itemNames."\n";
+                $notes .= 'Special Occasion Items: ' . "\n" . $itemNames;
             }
             $order_total = $order->total;
             $notes .= 'Payment Total Amount: '.$order_total." SAR. \n";
             if ($order->status == 'pending') {
                 $tags .= 'Payments:Processing Payment,';
-                $notes .= 'Payment Status: Pending. \n';
+                $notes .= 'Payment Status: Pending.';
             }
             if ($order->status == 'paid') {
                 $tags .= 'Payments:Paid,';
-                $notes .= 'Payment Status: Paid. \n';
+                $notes .= 'Payment Status: Paid.';
             }
         }
 
